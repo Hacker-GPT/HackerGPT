@@ -8,6 +8,39 @@ When you ask a question, it's sent to our server. We verify user authenticity an
    - **HackerGPT**: A tuned version of Palm 2 with semantic search on our data.
    - **GPT-4 Turbo**: The latest and greatest from OpenAI, paired with our unique prompt.
 
+## Getting Started with HackerGPT Locally
+
+**1. Clone Repo**
+
+```bash
+git clone https://github.com/Hacker-GPT/HackerGPT.git
+```
+
+**2. Install Dependencies**
+
+```bash
+npm i
+```
+
+**3. Configure Environment Variables**
+
+Initialize your environment settings by creating a `.env.local` file in the project's root directory. Simply duplicate the `.env.local.example` file, rename it to `.env.local`, and then update the values with your specific configurations. For PALM 2 usage, you'll need to modify the following entries:
+
+```bash
+SECRET_PALM2_CHAT_BISON_API_KEY=YOUR_OPENROUTER_API_KEY
+SECRET_PALM2_SYSTEM_PROMPT=YOUR_SYSTEM_PROMPT
+```
+
+**4. Run App**
+
+```bash
+npm run dev
+```
+
+**5. Use It**
+
+You should be able to start chatting.
+
 ## Have a feature request, question, comment?
 
 You can get in touch with us through email at [github@hackergpt.chat](mailto:github@hackergpt.chat) or connect with us on [X](https://twitter.com/thehackergpt).

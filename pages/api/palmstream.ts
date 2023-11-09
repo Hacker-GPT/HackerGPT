@@ -126,30 +126,32 @@ export const PalmStream = async (messages: Message[],) => {
         }
       };
 
-      if (cleanedMessages.length > 0 && cleanedMessages[cleanedMessages.length - 1].role === 'user') {
+      const usePinecone = process.env.USE_PINECONE === 'TRUE';
+
+      if (usePinecone && cleanedMessages.length > 0 && cleanedMessages[cleanedMessages.length - 1].role === 'user') {
         const combinedLastMessages = cleanedMessages[cleanedMessages.length - 1].content;
         const pineconeResults = await queryPineconeVectorStore(combinedLastMessages);
-      
+        
         if (pineconeResults !== "None") {
-          cleanedMessages[cleanedMessages.length - 1].content =
-            "Provide a well-informed and accurate response to the " +
-            "my question. Utilize your extensive knowledge and " +
-            "expertise, and where relevant, incorporate insights from " +
-            "the semantic search results to enrich your answer. Do not " +
-            "rely on these results as the sole source of information— " +
-            "they are supplemental and may not always be perfectly " +
-            "accurate. Focus on delivering a precise and comprehensive " +
-            "response that is reflective of your own understanding and " +
-            "capabilities as HackerGPT. Here is the my question and " +
-            "the related semantic search results:\n" +
-            `Question: """${combinedLastMessages}"""\n` +
-            "Semantic Search Context (Use as reference only): " +
-            `"""${pineconeResults}"""\n` +
-            "Your response should directly address the my question " +
-            "above, with clarity and depth.\n" +
-            "Response:";
+            cleanedMessages[cleanedMessages.length - 1].content =
+              "Provide a well-informed and accurate response to the " +
+              "my question. Utilize your extensive knowledge and " +
+              "expertise, and where relevant, incorporate insights from " +
+              "the semantic search results to enrich your answer. Do not " +
+              "rely on these results as the sole source of information— " +
+              "they are supplemental and may not always be perfectly " +
+              "accurate. Focus on delivering a precise and comprehensive " +
+              "response that is reflective of your own understanding and " +
+              "capabilities as HackerGPT. Here is the my question and " +
+              "the related semantic search results:\n" +
+              `Question: """${combinedLastMessages}"""\n` +
+              "Semantic Search Context (Use as reference only): " +
+              `"""${pineconeResults}"""\n` +
+              "Your response should directly address the my question " +
+              "above, with clarity and depth.\n" +
+              "Response:";
         }
-      }      
+      }
 
     try {
         const requestBody = {

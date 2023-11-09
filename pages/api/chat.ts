@@ -95,21 +95,44 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const response = await fetch(`${process.env.SECRET_CHECK_USER_STATUS_FIREBASE_FUNCTION_URL}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `${authToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: model,
-      }),
-    });
+    const skipFirebaseStatusCheck = process.env.SKIP_FIREBASE_STATUS_CHECK === 'TRUE';
+
+    let userStatusOk = true; 
+
+    if (!skipFirebaseStatusCheck) {
+      const response = await fetch(`${process.env.SECRET_CHECK_USER_STATUS_FIREBASE_FUNCTION_URL}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+        }),
+      });
+
+      userStatusOk = response.ok;
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(errorText, { headers: corsHeaders });
+      }
+    }
+  
 
     let googleSources: GoogleSource[] = [];
     let answerMessage: Message = { role: 'user', content: '' };
 
-    if (model === 'gpt-3.5-turbo') {
+    const useWebBrowsingPlugin = process.env.USE_WEB_BROWSING_PLUGIN === 'TRUE';
+
+    if (model === ModelType.GoogleBrowsing && !useWebBrowsingPlugin) {
+      return new Response(
+        "The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.",
+        { status: 200, headers: corsHeaders }
+      );
+    }
+  
+    if (model === ModelType.GoogleBrowsing) {
         const query = encodeURIComponent(messagesToSend[messagesToSend.length - 1].content.trim());
 
         const googleRes = await fetch(
@@ -230,9 +253,9 @@ const handler = async (req: Request): Promise<Response> => {
   
     encoding.free();
 
-    if (response.ok) {
+    if (userStatusOk) {
       let stream;
-      if (model === "gpt-3.5-turbo-instruct") {
+      if (model === ModelType.GPT35TurboInstruct) {
         stream = await PalmStream(messagesToSend);
       } else {
         stream = await OpenAIStream(model, messagesToSend, answerMessage);
@@ -242,10 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
         headers: corsHeaders,
       });
     } else {
-      const errorText = await response.text();
-      return new Response(errorText, {
-        headers: corsHeaders,
-      });
+      return new Response("An unexpected error occurred", { status: 500, headers: corsHeaders });
     }
   } catch (error) {
     console.error("An error occurred:", error);
