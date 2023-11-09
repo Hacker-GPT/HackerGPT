@@ -53,7 +53,7 @@
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
     "gpt-3-encoder": "^1.1.4",
-    "jsdom": "^21.1.1",
+    "jsdom": "^22.1.0",
     "postcss": "^8.4.31",
     "prettier": "^2.8.7",
     "prettier-plugin-tailwindcss": "^0.2.5",
