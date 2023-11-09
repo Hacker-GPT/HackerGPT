@@ -21,7 +21,7 @@
     "eventsource-parser": "^0.1.0",
     "firebase": "^10.5.0",
     "i18next": "^22.5.1",
-    "langchain": "^0.0.181",
+    "langchain": "^0.0.184",
     "next": "^13.5.5",
     "next-i18next": "^13.2.2",
     "openai": "^3.2.1",
