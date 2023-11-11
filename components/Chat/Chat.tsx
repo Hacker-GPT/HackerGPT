@@ -12,10 +12,9 @@ import {
 import toast from 'react-hot-toast';
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import firebase from "@/utils/server/firebase-client-init";
-import { initFirebaseApp } from "@/utils/server/firebase-client-init";
-import {getPremiumStatus} from "@/components/Payments/getPremiumStatus"
-
+import firebase from '@/utils/server/firebase-client-init';
+import { initFirebaseApp } from '@/utils/server/firebase-client-init';
+import { getPremiumStatus } from '@/components/Payments/getPremiumStatus';
 
 import { useTranslation } from 'next-i18next';
 
@@ -77,47 +76,47 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
       let user = auth.currentUser;
-        
-        let token;
-        let newMessages: Message[] = [];
-        if (user) {       
-          try {
-            token = await user.getIdToken(true);
-          } catch (error) {
-            // Handle token generation error (optional)
-            toast.error('Unable to generate Auth token');
-            return;
-          }
-        } else {
-          // User is not logged in, so append a bot message
-          newMessages.push(message);
 
-      // Append a bot message
-      newMessages.push({
-        role: 'assistant',
-        content: `
+      let token;
+      let newMessages: Message[] = [];
+      if (user) {
+        try {
+          token = await user.getIdToken(true);
+        } catch (error) {
+          // Handle token generation error (optional)
+          toast.error('Unable to generate Auth token');
+          return;
+        }
+      } else {
+        // User is not logged in, so append a bot message
+        newMessages.push(message);
+
+        // Append a bot message
+        newMessages.push({
+          role: 'assistant',
+          content: `
         \n🛑 **Whoa, hold on a sec!** 
         \n🔓 **Ready to chat?** 
         \n* All you need to do is **SIGN UP** or **LOG IN** now. 
         \n🤖 **So what are you waiting for?** 
         \n* We've got a lot to talk about!
         `,
-      });
-
-      if (selectedConversation) {
-        const updatedConversation: Conversation = {
-          ...selectedConversation,
-          messages: [...selectedConversation.messages, ...newMessages],
-        };
-
-        homeDispatch({
-          field: 'selectedConversation',
-          value: updatedConversation,
         });
 
-        return;
-          }
+        if (selectedConversation) {
+          const updatedConversation: Conversation = {
+            ...selectedConversation,
+            messages: [...selectedConversation.messages, ...newMessages],
+          };
+
+          homeDispatch({
+            field: 'selectedConversation',
+            value: updatedConversation,
+          });
+
+          return;
         }
+      }
 
       if (selectedConversation) {
         let updatedConversation: Conversation;
@@ -147,7 +146,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           model: updatedConversation.model.id,
           messages: updatedConversation.messages,
         };
-        
+
         let body;
         if (!plugin) {
           body = JSON.stringify(chatBody);
@@ -164,7 +163,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           signal: controller.signal,
           body,
@@ -249,7 +248,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 return updatedConversation;
               }
               return conversation;
-            },
+            }
           );
           if (updatedConversations.length === 0) {
             updatedConversations.push(updatedConversation);
@@ -278,7 +277,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 return updatedConversation;
               }
               return conversation;
-            },
+            }
           );
           if (updatedConversations.length === 0) {
             updatedConversations.push(updatedConversation);
@@ -296,7 +295,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       pluginKeys,
       selectedConversation,
       stopConversationRef,
-    ],
+    ]
   );
 
   const [isPremium, setIsPremium] = useState(false);
@@ -313,8 +312,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     };
     checkPremium();
   }, [app, auth.currentUser?.uid]);
-
-
 
   const scrollToBottom = useCallback(() => {
     if (autoScrollEnabled) {
@@ -381,7 +378,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     throttledScrollDown();
     selectedConversation &&
       setCurrentMessage(
-        selectedConversation.messages[selectedConversation.messages.length - 2],
+        selectedConversation.messages[selectedConversation.messages.length - 2]
       );
   }, [selectedConversation, throttledScrollDown]);
 
@@ -396,7 +393,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       {
         root: null,
         threshold: 0.5,
-      },
+      }
     );
     const messagesEndElement = messagesEndRef.current;
     if (messagesEndElement) {
@@ -412,98 +409,112 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   const model = selectedConversation?.model;
 
   return (
-    <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
-        <>
-          <div
-            className="max-h-full overflow-x-hidden"
-            ref={chatContainerRef}
-            onScroll={handleScroll}
-          >
-            {selectedConversation?.messages.length === 0 ? (
-              <>
-                <div className="mx-auto flex flex-col space-y-5 md:space-y-12 px-3 pt-5 md:pt-6 sm:max-w-[600px]">
-                    <div className='z-10'> 
-                          {models.length > 0 && (
-                          <ModelSelect />
-                            )}
-                    </div>
-                  <div className="absolute inset-x-0 top-28 flex items-center justify-center flex items-center justify-center text-4xl font-semibold text-center text-gray-200 dark:text-gray-600 ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 flex-grow">
-                    {models.length === 0 ? (
-                      <div>
-                        <Spinner size="18px" className="mx-auto" />
-                      </div>
-                    ) : (
-                      <>
-                      {'HackerGPT'}
-                      {isPremium && (<span className="bg-yellow-200 text-yellow-900 py-0.5 px-1.5 text-xs md:text-sm rounded-md uppercase">Plus</span>)}
-                      </>
-                    )}
-                  </div>
+    <div className="relative flex-1 overflow-hidden bg-white dark:bg-hgpt-medium-gray">
+      <>
+        <div
+          className="max-h-full overflow-x-hidden"
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+        >
+          {selectedConversation?.messages.length === 0 ? (
+            <>
+              <div className="mx-auto flex flex-col space-y-5 px-3 pt-5 sm:max-w-[600px] md:space-y-12 md:pt-6">
+                <div className="z-10">
+                  {models.length > 0 && <ModelSelect />}
                 </div>
-              </>
-        ) : (
-          <>
-            <div className="gap-2 sticky top-0 z-10 flex justify-center border border-b-neutral-300 bg-neutral-100 py-5 text-sm text-neutral-500 dark:border-none dark:bg-[#444654] dark:text-neutral-200 flex-1 flex-grow items-center sm:justify-center">
-              {model && (
-                <>
-                  {model.name === "HackerGPT" ? (
-                    <IconBrandOpenai size={20} />
-                  ) : model.name === "Web Browsing (GPT-4)" ? (
-                    <IconWorld size={20} />
+                <div className="absolute inset-x-0 top-28 ml-auto mr-auto mb-10 flex flex flex flex-grow items-center items-center justify-center justify-center gap-2 text-center text-4xl font-semibold text-gray-200 dark:text-gray-600 sm:mb-16">
+                  {models.length === 0 ? (
+                    <div>
+                      <Spinner size="18px" className="mx-auto" />
+                    </div>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" className="icon-sm transition-colors group-hover/button:text-brand-purple" width="16" height="16"><path d="M12.784 1.442a.8.8 0 0 0-1.569 0l-.191.953a.8.8 0 0 1-.628.628l-.953.19a.8.8 0 0 0 0 1.57l.953.19a.8.8 0 0 1 .628.629l.19.953a.8.8 0 0 0 1.57 0l.19-.953a.8.8 0 0 1 .629-.628l.953-.19a.8.8 0 0 0 0-1.57l-.953-.19a.8.8 0 0 1-.628-.629l-.19-.953h-.002ZM5.559 4.546a.8.8 0 0 0-1.519 0l-.546 1.64a.8.8 0 0 1-.507.507l-1.64.546a.8.8 0 0 0 0 1.519l1.64.547a.8.8 0 0 1 .507.505l.546 1.641a.8.8 0 0 0 1.519 0l.546-1.64a.8.8 0 0 1 .506-.507l1.641-.546a.8.8 0 0 0 0-1.519l-1.64-.546a.8.8 0 0 1-.507-.506L5.56 4.546Zm5.6 6.4a.8.8 0 0 0-1.519 0l-.147.44a.8.8 0 0 1-.505.507l-.441.146a.8.8 0 0 0 0 1.519l.44.146a.8.8 0 0 1 .507.506l.146.441a.8.8 0 0 0 1.519 0l.147-.44a.8.8 0 0 1 .506-.507l.44-.146a.8.8 0 0 0 0-1.519l-.44-.147a.8.8 0 0 1-.507-.505l-.146-.441Z" fill="currentColor"></path></svg>
+                    <>
+                      {'HackerGPT'}
+                      {isPremium && (
+                        <span className="rounded-md bg-yellow-200 py-0.5 px-1.5 text-xs uppercase text-yellow-900 md:text-sm">
+                          Plus
+                        </span>
+                      )}
+                    </>
                   )}
-                  {model.name}
-                </>
-              )}
-            </div>
-            {showSettings && (
-              <div className="flex flex-col space-y-10 md:mx-auto md:max-w-xl md:gap-6 md:py-3 md:pt-6 lg:max-w-2xl lg:px-0 xl:max-w-3xl">
-                <ModelSelect />
+                </div>
               </div>
-            )}
+            </>
+          ) : (
+            <>
+              <div className="sticky top-0 z-10 flex flex-1 flex-grow items-center justify-center gap-2 border border-b-neutral-300 bg-neutral-100 py-5 text-sm text-neutral-500 dark:border-none dark:bg-hgpt-light-gray dark:text-neutral-200 sm:justify-center">
+                {model && (
+                  <>
+                    {model.name === 'HackerGPT' ? (
+                      <IconBrandOpenai size={20} />
+                    ) : model.name === 'Web Browsing (GPT-4)' ? (
+                      <IconWorld size={20} />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="icon-sm group-hover/button:text-brand-purple transition-colors"
+                        width="16"
+                        height="16"
+                      >
+                        <path
+                          d="M12.784 1.442a.8.8 0 0 0-1.569 0l-.191.953a.8.8 0 0 1-.628.628l-.953.19a.8.8 0 0 0 0 1.57l.953.19a.8.8 0 0 1 .628.629l.19.953a.8.8 0 0 0 1.57 0l.19-.953a.8.8 0 0 1 .629-.628l.953-.19a.8.8 0 0 0 0-1.57l-.953-.19a.8.8 0 0 1-.628-.629l-.19-.953h-.002ZM5.559 4.546a.8.8 0 0 0-1.519 0l-.546 1.64a.8.8 0 0 1-.507.507l-1.64.546a.8.8 0 0 0 0 1.519l1.64.547a.8.8 0 0 1 .507.505l.546 1.641a.8.8 0 0 0 1.519 0l.546-1.64a.8.8 0 0 1 .506-.507l1.641-.546a.8.8 0 0 0 0-1.519l-1.64-.546a.8.8 0 0 1-.507-.506L5.56 4.546Zm5.6 6.4a.8.8 0 0 0-1.519 0l-.147.44a.8.8 0 0 1-.505.507l-.441.146a.8.8 0 0 0 0 1.519l.44.146a.8.8 0 0 1 .507.506l.146.441a.8.8 0 0 0 1.519 0l.147-.44a.8.8 0 0 1 .506-.507l.44-.146a.8.8 0 0 0 0-1.519l-.44-.147a.8.8 0 0 1-.507-.505l-.146-.441Z"
+                          fill="currentColor"
+                        ></path>
+                      </svg>
+                    )}
+                    {model.name}
+                  </>
+                )}
+              </div>
+              {showSettings && (
+                <div className="flex flex-col space-y-10 md:mx-auto md:max-w-xl md:gap-6 md:py-3 md:pt-6 lg:max-w-2xl lg:px-0 xl:max-w-3xl">
+                  <ModelSelect />
+                </div>
+              )}
 
-{selectedConversation?.messages.map((message, index) => (
-                  <MemoizedChatMessage
-                    key={index}
-                    message={message}
-                    messageIndex={index}
-                    onEdit={(editedMessage) => {
-                      setCurrentMessage(editedMessage);
-                      handleSend(
-                        editedMessage,
-                        selectedConversation?.messages.length - index,
-                      );
-                    }}
-                  />
-                ))}
-
-                {loading && <ChatLoader />}
-
-                <div
-                  className="h-[162px] bg-white dark:bg-[#343541]"
-                  ref={messagesEndRef}
+              {selectedConversation?.messages.map((message, index) => (
+                <MemoizedChatMessage
+                  key={index}
+                  message={message}
+                  messageIndex={index}
+                  onEdit={(editedMessage) => {
+                    setCurrentMessage(editedMessage);
+                    handleSend(
+                      editedMessage,
+                      selectedConversation?.messages.length - index
+                    );
+                  }}
                 />
-              </>
-            )}
-          </div>
+              ))}
 
-          <ChatInput
-            stopConversationRef={stopConversationRef}
-            textareaRef={textareaRef}
-            onSend={(message, plugin) => {
-              setCurrentMessage(message);
-              handleSend(message, 0, plugin);
-            }}
-            onScrollDownClick={handleScrollDown}
-            onRegenerate={() => {
-              if (currentMessage) {
-                handleSend(currentMessage, 2, null);
-              }
-            }}
-            showScrollDownButton={showScrollDownButton}
-          />
-        </>
+              {loading && <ChatLoader />}
+
+              <div
+                className="h-[162px] bg-white dark:bg-hgpt-medium-gray"
+                ref={messagesEndRef}
+              />
+            </>
+          )}
+        </div>
+
+        <ChatInput
+          stopConversationRef={stopConversationRef}
+          textareaRef={textareaRef}
+          onSend={(message, plugin) => {
+            setCurrentMessage(message);
+            handleSend(message, 0, plugin);
+          }}
+          onScrollDownClick={handleScrollDown}
+          onRegenerate={() => {
+            if (currentMessage) {
+              handleSend(currentMessage, 2, null);
+            }
+          }}
+          showScrollDownButton={showScrollDownButton}
+        />
+      </>
     </div>
   );
 });

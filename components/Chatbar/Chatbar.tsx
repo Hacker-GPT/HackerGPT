@@ -55,12 +55,11 @@ export const Chatbar = () => {
 
     localStorage.removeItem('conversationHistory');
     localStorage.removeItem('selectedConversation');
-  
   };
 
   const handleDeleteConversation = (conversation: Conversation) => {
     const updatedConversations = conversations.filter(
-      (c) => c.id !== conversation.id,
+      (c) => c.id !== conversation.id
     );
 
     homeDispatch({ field: 'conversations', value: updatedConversations });
@@ -81,14 +80,14 @@ export const Chatbar = () => {
             id: uuidv4(),
             name: t('New Chat'),
             messages: [],
-            model: OpenAIModels[defaultModelId]
+            model: OpenAIModels[defaultModelId],
           },
         });
 
       localStorage.removeItem('selectedConversation');
     }
   };
-  
+
   const handleToggleChatbar = () => {
     homeDispatch({ field: 'showChatbar', value: !showChatbar });
     localStorage.setItem('showChatbar', JSON.stringify(!showChatbar));
@@ -140,7 +139,9 @@ export const Chatbar = () => {
         toggleOpen={handleToggleChatbar}
         handleCreateItem={handleNewConversation}
         handleDrop={handleDrop}
-        footerComponent={<ChatbarSettings />} folderComponent={undefined} />
+        footerComponent={<ChatbarSettings />}
+        folderComponent={undefined}
+      />
     </ChatbarContext.Provider>
   );
 };

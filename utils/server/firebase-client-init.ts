@@ -1,18 +1,18 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import 'firebase/compat/firestore'; 
+import 'firebase/compat/firestore';
 import 'firebase/compat/functions';
 import 'firebase/compat/performance';
-import 'firebase/compat/analytics';   
+import 'firebase/compat/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCQ8QlvMtQvpnj_7sfEIE8-YorcFOGlHCo",
-  authDomain: "hackergpt-6c79e.firebaseapp.com",
-  projectId: "hackergpt-6c79e",
-  storageBucket: "hackergpt-6c79e.appspot.com",
-  messagingSenderId: "155863184166",
-  appId: "1:155863184166:web:464d3eb4683ba129fe47e7",
-  measurementId: "G-F859ZBGG23"
+  apiKey: 'AIzaSyCQ8QlvMtQvpnj_7sfEIE8-YorcFOGlHCo',
+  authDomain: 'hackergpt-6c79e.firebaseapp.com',
+  projectId: 'hackergpt-6c79e',
+  storageBucket: 'hackergpt-6c79e.appspot.com',
+  messagingSenderId: '155863184166',
+  appId: '1:155863184166:web:464d3eb4683ba129fe47e7',
+  measurementId: 'G-F859ZBGG23',
 };
 
 let app: firebase.app.App;

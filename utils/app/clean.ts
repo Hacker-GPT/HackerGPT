@@ -14,7 +14,8 @@ export const cleanSelectedConversation = (conversation: Conversation) => {
   if (!updatedConversation.model) {
     updatedConversation = {
       ...updatedConversation,
-      model: updatedConversation.model || OpenAIModels[OpenAIModelID.HackerGPT_3_5],
+      model:
+        updatedConversation.model || OpenAIModels[OpenAIModelID.HackerGPT_3_5],
     };
   }
 
@@ -55,7 +56,7 @@ export const cleanConversationHistory = (history: any[]): Conversation[] => {
     } catch (error) {
       console.warn(
         `error while cleaning conversations' history. Removing culprit`,
-        error,
+        error
       );
     }
     return acc;

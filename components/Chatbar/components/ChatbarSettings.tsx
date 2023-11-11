@@ -1,15 +1,17 @@
-import { IconSettings, 
-  IconUserCircle, 
+import {
+  IconSettings,
+  IconUserCircle,
   IconLogin,
-  IconDots, 
+  IconDots,
   IconLockOpen,
   IconNews,
   IconInfoCircle,
-  IconBrandTwitter } from '@tabler/icons-react';
+  IconBrandTwitter,
+} from '@tabler/icons-react';
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import firebase from "@/utils/server/firebase-client-init";
-import { initFirebaseApp } from "@/utils/server/firebase-client-init";
+import firebase from '@/utils/server/firebase-client-init';
+import { initFirebaseApp } from '@/utils/server/firebase-client-init';
 
 import { useEffect, useState, useContext } from 'react';
 
@@ -23,10 +25,10 @@ import { SidebarButton } from '../../Sidebar/SidebarButton';
 import ChatbarContext from '../Chatbar.context';
 import { ClearConversations } from './ClearConversations';
 
-import LoginSignupPopup from '@/components/Authorization/LoginSignupPopup'
+import LoginSignupPopup from '@/components/Authorization/LoginSignupPopup';
 
-import { getCheckoutUrl } from "@/components/Payments/stripePayments";
-import {getPremiumStatus} from "@/components/Payments/getPremiumStatus"
+import { getCheckoutUrl } from '@/components/Payments/stripePayments';
+import { getPremiumStatus } from '@/components/Payments/getPremiumStatus';
 import UpgradeToPremiumPopup from '@/components/Payments/UpgradeToPremiumPopup';
 
 export const ChatbarSettings = () => {
@@ -52,15 +54,11 @@ export const ChatbarSettings = () => {
   }, [app, auth.currentUser?.uid]);
 
   const {
-    state: {
-      conversations,
-    },
+    state: { conversations },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
-  const {
-    handleClearConversations,
-  } = useContext(ChatbarContext);
+  const { handleClearConversations } = useContext(ChatbarContext);
 
   useEffect(() => {
     const auth = getAuth();
@@ -106,92 +104,100 @@ export const ChatbarSettings = () => {
     fetchCheckoutUrl();
   }, [auth.currentUser?.uid]);
 
-  const displayIdentifier = user?.displayName || (user?.email ? user.email.split('@')[0] : null);
+  const displayIdentifier =
+    user?.displayName || (user?.email ? user.email.split('@')[0] : null);
 
   return (
     <div className="">
       {conversations.length > 0 ? (
         <ClearConversations onClearConversations={handleClearConversations} />
       ) : null}
-    <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">   
-      {displayIdentifier ? (
-        <>
-          {!isPremium && !isLoading && ( 
-            <SidebarButton
-              text={t('Upgrade to Plus')}
-              icon={<IconLockOpen size={18} />}
-              onClick={handleUpgradePopupOpen}
-            />
-          )}
-
-        <UpgradeToPremiumPopup 
-                isOpen={isUpgradePopupOpen} 
-                onClose={handleUpgradePopupClose}
-                checkoutUrl={checkoutUrl}
+      <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
+        {displayIdentifier ? (
+          <>
+            {!isPremium && !isLoading && (
+              <SidebarButton
+                text={t('Upgrade to Plus')}
+                icon={<IconLockOpen size={18} />}
+                onClick={handleUpgradePopupOpen}
               />
+            )}
 
-          <SidebarButton
-            icon={<IconUserCircle size={18} />}
-            text={displayIdentifier}
-            suffixIcon={<IconDots size={18} strokeWidth={1.5} />}
-            onClick={() => setIsSettingDialog(true)}
-          />
-        </>
-      ) : (
-        <>
-          <SidebarButton
-          text={t('Settings')}
-          icon={<IconSettings size={18} />}
-          onClick={() => setIsSettingDialog(true)}
-          />
-          <SidebarButton
-            text={t('Log in')}
-            icon={<IconLogin size={18} />}
-            onClick={handleLoginModalOpen}
-          />
-        </>
-      )}
-       <div className="flex w-full">
+            <UpgradeToPremiumPopup
+              isOpen={isUpgradePopupOpen}
+              onClose={handleUpgradePopupClose}
+              checkoutUrl={checkoutUrl}
+            />
+
+            <SidebarButton
+              icon={<IconUserCircle size={18} />}
+              text={displayIdentifier}
+              suffixIcon={<IconDots size={18} strokeWidth={1.5} />}
+              onClick={() => setIsSettingDialog(true)}
+            />
+          </>
+        ) : (
+          <>
+            <SidebarButton
+              text={t('Settings')}
+              icon={<IconSettings size={18} />}
+              onClick={() => setIsSettingDialog(true)}
+            />
+            <SidebarButton
+              text={t('Log in')}
+              icon={<IconLogin size={18} />}
+              onClick={handleLoginModalOpen}
+            />
+          </>
+        )}
+        <div className="flex w-full">
           <SidebarButton
             className="flex-grow"
             text={t('About us')}
             icon={<IconInfoCircle size={18} />}
             onClick={() => {
-              window.open(
-                '/about-us',
-                '_blank',
-              );
+              window.open('/about-us', '_blank');
             }}
           />
           <SidebarButton
             className="w-min"
-            icon={<svg xmlns="http://www.w3.org/2000/svg" className="icon icon-tabler icon-tabler-brand-x" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
-            <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
-         </svg>}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon icon-tabler icon-tabler-brand-x"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 4l11.733 16h4.267l-11.733 -16z"></path>
+                <path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path>
+              </svg>
+            }
             onClick={() => {
-              window.open(
-                'https://twitter.com/thehackergpt',
-                '_blank',
-              );
+              window.open('https://twitter.com/thehackergpt', '_blank');
             }}
           />
         </div>
 
-      <SettingDialog
-        open={isSettingDialogOpen}
-        onClose={() => {
-          setIsSettingDialog(false);
-        }}
-      />
-
-            {isLoginModalOpen && (
-        <LoginSignupPopup 
-          isOpen={isLoginModalOpen} 
-          onClose={handleLoginModalClose}
+        <SettingDialog
+          open={isSettingDialogOpen}
+          onClose={() => {
+            setIsSettingDialog(false);
+          }}
         />
-      )}
+
+        {isLoginModalOpen && (
+          <LoginSignupPopup
+            isOpen={isLoginModalOpen}
+            onClose={handleLoginModalClose}
+          />
+        )}
       </div>
     </div>
   );

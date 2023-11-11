@@ -36,11 +36,11 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
     const fileExtension = programmingLanguages[language] || '.file';
     const suggestedFileName = `file-${generateRandomString(
       3,
-      true,
+      true
     )}${fileExtension}`;
     const fileName = window.prompt(
       t('Enter file name') || '',
-      suggestedFileName,
+      suggestedFileName
     );
 
     if (!fileName) {
@@ -66,7 +66,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
 
         <div className="flex items-center">
           <button
-            className="flex gap-1.5 items-center rounded bg-none p-1 text-xs text-white"
+            className="flex items-center gap-1.5 rounded bg-none p-1 text-xs text-white"
             onClick={copyToClipboard}
           >
             {isCopied ? <IconCheck size={18} /> : <IconClipboard size={18} />}

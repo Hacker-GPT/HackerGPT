@@ -1,5 +1,5 @@
 import { OpenAIError, OpenAIStream } from '@/pages/api/openaistream';
-import { PalmStream } from '@/pages/api/palmstream'
+import { PalmStream } from '@/pages/api/palmstream';
 import { ChatBody, Message } from '@/types/chat';
 
 // @ts-expect-error
@@ -50,7 +50,10 @@ const handler = async (req: Request): Promise<Response> => {
     const tokenLimit = getTokenLimit(model);
 
     if (!tokenLimit) {
-      return new Response('Error: Model not found', { status: 400, headers: corsHeaders });
+      return new Response('Error: Model not found', {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     let reservedTokens = 1500;
@@ -62,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     const encoding = new Tiktoken(
       tiktokenModel.bpe_ranks,
       tiktokenModel.special_tokens,
-      tiktokenModel.pat_str,
+      tiktokenModel.pat_str
     );
 
     const promptToSend = () => {
@@ -77,8 +80,8 @@ const handler = async (req: Request): Promise<Response> => {
     const lastMessageTokens = encoding.encode(lastMessage.content);
 
     if (lastMessageTokens.length + reservedTokens > tokenLimit) {
-        const errorMessage = `This message exceeds the model's maximum token limit of ${tokenLimit}. Please shorten your message.`;
-        return new Response(errorMessage, { headers: corsHeaders });
+      const errorMessage = `This message exceeds the model's maximum token limit of ${tokenLimit}. Please shorten your message.`;
+      return new Response(errorMessage, { headers: corsHeaders });
     }
 
     tokenCount += lastMessageTokens.length;
@@ -95,21 +98,25 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const skipFirebaseStatusCheck = process.env.SKIP_FIREBASE_STATUS_CHECK === 'TRUE';
+    const skipFirebaseStatusCheck =
+      process.env.SKIP_FIREBASE_STATUS_CHECK === 'TRUE';
 
-    let userStatusOk = true; 
+    let userStatusOk = true;
 
     if (!skipFirebaseStatusCheck) {
-      const response = await fetch(`${process.env.SECRET_CHECK_USER_STATUS_FIREBASE_FUNCTION_URL}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: model,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.SECRET_CHECK_USER_STATUS_FIREBASE_FUNCTION_URL}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model,
+          }),
+        }
+      );
 
       userStatusOk = response.ok;
 
@@ -118,7 +125,6 @@ const handler = async (req: Request): Promise<Response> => {
         return new Response(errorText, { headers: corsHeaders });
       }
     }
-  
 
     let googleSources: GoogleSource[] = [];
     let answerMessage: Message = { role: 'user', content: '' };
@@ -127,69 +133,72 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (model === ModelType.GoogleBrowsing && !useWebBrowsingPlugin) {
       return new Response(
-        "The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.",
+        'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
         { status: 200, headers: corsHeaders }
       );
     }
-  
+
     if (model === ModelType.GoogleBrowsing) {
-        const query = encodeURIComponent(messagesToSend[messagesToSend.length - 1].content.trim());
+      const query = encodeURIComponent(
+        messagesToSend[messagesToSend.length - 1].content.trim()
+      );
 
-        const googleRes = await fetch(
-          `https://customsearch.googleapis.com/customsearch/v1?key=${process.env.SECRET_GOOGLE_API_KEY
-          }&cx=${process.env.SECRET_GOOGLE_CSE_ID
-          }&q=${query}&num=5`
-        );
-        
-        if (!googleRes.ok) {
-          console.error('Error from Google API:', await googleRes.text());
-          return new Response('Google API returned an error.', { headers: corsHeaders });
-        }
-        
-        const googleData = await googleRes.json();
+      const googleRes = await fetch(
+        `https://customsearch.googleapis.com/customsearch/v1?key=${process.env.SECRET_GOOGLE_API_KEY}&cx=${process.env.SECRET_GOOGLE_CSE_ID}&q=${query}&num=5`
+      );
 
-        if (googleData && googleData.items) {
-          googleSources = googleData.items.map((item: any) => ({
-            title: item.title,
-            link: item.link,
-            displayLink: item.displayLink,
-            snippet: item.snippet,
-            image: item.pagemap?.cse_image?.[0]?.src,
-            text: '',
-          }));
+      if (!googleRes.ok) {
+        console.error('Error from Google API:', await googleRes.text());
+        return new Response('Google API returned an error.', {
+          headers: corsHeaders,
+        });
+      }
+
+      const googleData = await googleRes.json();
+
+      if (googleData && googleData.items) {
+        googleSources = googleData.items.map((item: any) => ({
+          title: item.title,
+          link: item.link,
+          displayLink: item.displayLink,
+          snippet: item.snippet,
+          image: item.pagemap?.cse_image?.[0]?.src,
+          text: '',
+        }));
       } else {
-          googleSources = [];
-      }      
-      
+        googleSources = [];
+      }
+
       const textDecoder = new TextDecoder();
 
       const sourcesWithText: any = await Promise.all(
         googleSources.map(async (source) => {
           try {
             const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Request timed out')), 5000),
+              setTimeout(() => reject(new Error('Request timed out')), 5000)
             );
-    
-            const res = await Promise.race([
+
+            const res = (await Promise.race([
               fetch(source.link), // <-- Replaced axios.get with fetch
               timeoutPromise,
-            ]) as Response;
+            ])) as Response;
 
-            if (!res || !res.ok) { // <-- Check if response is okay
+            if (!res || !res.ok) {
+              // <-- Check if response is okay
               console.error('Invalid response:', res);
               throw new Error('Invalid response');
             }
-    
+
             const textData = await res.text(); // <-- Extract text from response
             const $ = cheerio.load(textData); // <-- Load text into cheerio
             const sourceText = $('body').text().trim();
-  
+
             // Limit the text to 400 tokens
             let encodedText = encoding.encode(sourceText);
             if (encodedText.length > 400) {
               encodedText = encodedText.slice(0, 400);
             }
-  
+
             return {
               ...source,
               text: textDecoder.decode(encoding.decode(encodedText)),
@@ -198,36 +207,36 @@ const handler = async (req: Request): Promise<Response> => {
             console.error('Caught an error:', error);
             return null;
           }
-        }),
+        })
       );
 
-    // Filter out null sources
-    const filteredSources: GoogleSource[] = sourcesWithText.filter(Boolean);
+      // Filter out null sources
+      const filteredSources: GoogleSource[] = sourcesWithText.filter(Boolean);
 
       let sourceTexts: string[] = [];
       let tokenSizeTotalForGoogle = 0;
 
-        // Calculate available tokens for Google Sources and completion
-        const availableTokens = tokenLimit - tokenCount - reservedTokens; // 2000 for completion
+      // Calculate available tokens for Google Sources and completion
+      const availableTokens = tokenLimit - tokenCount - reservedTokens; // 2000 for completion
 
-        // Loop through each Google source and add it if it doesn't exceed the available tokens
-        for (const source of filteredSources) {
-            const decodedLink = decodeURIComponent(source.link);
-            const text = endent`
+      // Loop through each Google source and add it if it doesn't exceed the available tokens
+      for (const source of filteredSources) {
+        const decodedLink = decodeURIComponent(source.link);
+        const text = endent`
             ${source.title} (${decodedLink}):
             ${source.snippet}
             `;
-            const tokenSize = encoding.encode(text).length;
+        const tokenSize = encoding.encode(text).length;
 
-            if (tokenSizeTotalForGoogle + tokenSize <= availableTokens) {
-                sourceTexts.push(text);
-                tokenSizeTotalForGoogle += tokenSize;
-            } else {
-                break; // Stop adding more Google sources if it exceeds the available tokens
-            }
+        if (tokenSizeTotalForGoogle + tokenSize <= availableTokens) {
+          sourceTexts.push(text);
+          tokenSizeTotalForGoogle += tokenSize;
+        } else {
+          break; // Stop adding more Google sources if it exceeds the available tokens
         }
-    
-        const answerPrompt = endent`
+      }
+
+      const answerPrompt = endent`
           Answer the following questions as best you can. Pretend to utilize a "Programmable Search Engine" functionality to fetch and verify data from the web. Use the provided "sources" to give an accurate, role-played response. Respond in markdown format. Cite the "sources" you "used" as a markdown link at the end of each sentence by the number of the "source" (ex: [[1]](link.com)). Provide an accurate role-played response and then stop. Today's date is ${new Date().toLocaleDateString()}.
           
           Example Input:
@@ -250,7 +259,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       answerMessage = { role: 'user', content: answerPrompt };
     }
-  
+
     encoding.free();
 
     if (userStatusOk) {
@@ -265,16 +274,26 @@ const handler = async (req: Request): Promise<Response> => {
         headers: corsHeaders,
       });
     } else {
-      return new Response("An unexpected error occurred", { status: 500, headers: corsHeaders });
+      return new Response('An unexpected error occurred', {
+        status: 500,
+        headers: corsHeaders,
+      });
     }
   } catch (error) {
-    console.error("An error occurred:", error);
+    console.error('An error occurred:', error);
     if (error instanceof OpenAIError) {
-        return new Response('OpenAI Error', { status: 500, statusText: error.message, headers: corsHeaders });
+      return new Response('OpenAI Error', {
+        status: 500,
+        statusText: error.message,
+        headers: corsHeaders,
+      });
     } else {
-        return new Response('Internal Server Error', { status: 500, headers: corsHeaders });
+      return new Response('Internal Server Error', {
+        status: 500,
+        headers: corsHeaders,
+      });
     }
-}
+  }
 };
 
 export default handler;

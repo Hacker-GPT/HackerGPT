@@ -49,7 +49,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
 
   const handleDragStart = (
     e: DragEvent<HTMLButtonElement>,
-    conversation: Conversation,
+    conversation: Conversation
   ) => {
     if (e.dataTransfer) {
       e.dataTransfer.setData('conversation', JSON.stringify(conversation));
@@ -76,7 +76,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
     });
     return unsubscribe;
   }, []);
-  
+
   const handleConfirm: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
     if (isDeleting) {
@@ -87,7 +87,6 @@ export const ConversationComponent = ({ conversation }: Props) => {
     setIsDeleting(false);
     setIsRenaming(false);
   };
-  
 
   const handleCancel: MouseEventHandler<HTMLButtonElement> = (e) => {
     e.stopPropagation();
@@ -116,7 +115,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
   return (
     <div className="relative flex items-center">
       {isRenaming && selectedConversation?.id === conversation.id ? (
-        <div className="flex w-full items-center gap-3 rounded-lg bg-[#343541]/90 p-3">
+        <div className="flex w-full items-center gap-3 rounded-lg bg-hgpt-medium-gray/90 p-3">
           <IconMessage size={18} />
           <input
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white outline-none focus:border-neutral-100"
@@ -129,11 +128,11 @@ export const ConversationComponent = ({ conversation }: Props) => {
         </div>
       ) : (
         <button
-          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-[#343541]/90 ${
+          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm transition-colors duration-200 hover:bg-hgpt-medium-gray/90 ${
             messageIsStreaming ? 'disabled:cursor-not-allowed' : ''
           } ${
             selectedConversation?.id === conversation.id
-              ? 'bg-[#343541]/90'
+              ? 'bg-hgpt-medium-gray/90'
               : ''
           }`}
           onClick={() => handleSelectConversation(conversation)}

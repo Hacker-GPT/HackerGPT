@@ -14,7 +14,7 @@ export interface HomeContextProps {
   handleSelectConversation: (conversation: Conversation) => void;
   handleUpdateConversation: (
     conversation: Conversation,
-    data: KeyValuePair,
+    data: KeyValuePair
   ) => void;
 }
 

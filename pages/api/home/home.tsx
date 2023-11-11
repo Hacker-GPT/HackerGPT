@@ -34,7 +34,12 @@ import HomeContext from './home.context';
 import { HomeInitialState, initialState } from './home.state';
 
 import LoginSignupPopup from '@/components/Authorization/LoginSignupPopup';
-import { getAuth, isSignInWithEmailLink, onAuthStateChanged, signInWithEmailLink } from 'firebase/auth';
+import {
+  getAuth,
+  isSignInWithEmailLink,
+  onAuthStateChanged,
+  signInWithEmailLink,
+} from 'firebase/auth';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -59,12 +64,7 @@ const Home = ({
   });
 
   const {
-    state: {
-      apiKey,
-      lightMode,
-      conversations,
-      selectedConversation,
-    },
+    state: { apiKey, lightMode, conversations, selectedConversation },
     dispatch,
   } = contextValue;
 
@@ -77,7 +77,7 @@ const Home = ({
 
       return getModels();
     },
-    { enabled: true, refetchOnMount: false },
+    { enabled: true, refetchOnMount: false }
   );
 
   useEffect(() => {
@@ -101,7 +101,7 @@ const Home = ({
         setIsLoginModalOpen(false);
       } else {
         setUserId(null);
-  
+
         // Checking for email link
         if (isSignInWithEmailLink(auth, window.location.href)) {
           const email = window.localStorage.getItem('emailForSignIn');
@@ -117,10 +117,9 @@ const Home = ({
         }
       }
     });
-  
+
     return () => unsubscribe();
   }, []);
-  
 
   const handleModalClose = () => {
     setIsLoginModalOpen(false);
@@ -129,7 +128,6 @@ const Home = ({
   // FETCH MODELS ----------------------------------------------
 
   const handleSelectConversation = (conversation: Conversation) => {
-
     dispatch({
       field: 'selectedConversation',
       value: conversation,
@@ -138,10 +136,9 @@ const Home = ({
     saveConversation(conversation);
   };
 
-// CONVERSATION OPERATIONS  --------------------------------------------
+  // CONVERSATION OPERATIONS  --------------------------------------------
 
   const handleNewConversation = () => {
-
     const lastConversation = conversations[conversations.length - 1];
 
     const newConversation: Conversation = {
@@ -169,9 +166,8 @@ const Home = ({
 
   const handleUpdateConversation = (
     conversation: Conversation,
-    data: KeyValuePair,
+    data: KeyValuePair
   ) => {
-    
     const updatedConversation = {
       ...conversation,
       [data.key]: data.value,
@@ -179,7 +175,7 @@ const Home = ({
 
     const { single, all } = updateConversation(
       updatedConversation,
-      conversations,
+      conversations
     );
 
     dispatch({ field: 'selectedConversation', value: single });
@@ -253,7 +249,7 @@ const Home = ({
       const parsedConversationHistory: Conversation[] =
         JSON.parse(conversationHistory);
       const cleanedConversationHistory = cleanConversationHistory(
-        parsedConversationHistory,
+        parsedConversationHistory
       );
 
       dispatch({ field: 'conversations', value: cleanedConversationHistory });
@@ -264,7 +260,7 @@ const Home = ({
       const parsedSelectedConversation: Conversation =
         JSON.parse(selectedConversation);
       const cleanedSelectedConversation = cleanSelectedConversation(
-        parsedSelectedConversation,
+        parsedSelectedConversation
       );
 
       dispatch({
@@ -279,7 +275,7 @@ const Home = ({
           id: uuidv4(),
           name: t('New Chat'),
           messages: [],
-          model: OpenAIModels[defaultModelId]
+          model: OpenAIModels[defaultModelId],
         },
       });
     }
@@ -300,16 +296,24 @@ const Home = ({
       }}
     >
       <Head>
-      <title>HackerGPT</title>
-      <meta name="description" content="Unlock the power of HackerGPT, your AI ethical hacking assistant, trained extensively on hacking knowledge. Swiftly identify, exploit, and mitigate vulnerabilities using cutting-edge AI expertise in cybersecurity." />
+        <title>HackerGPT</title>
+        <meta
+          name="description"
+          content="Unlock the power of HackerGPT, your AI ethical hacking assistant, trained extensively on hacking knowledge. Swiftly identify, exploit, and mitigate vulnerabilities using cutting-edge AI expertise in cybersecurity."
+        />
         <meta
           name="viewport"
           content="height=device-height ,width=device-width, initial-scale=1, user-scalable=no"
         />
         <link rel="icon" href="/favicon.ico" />
-      </Head>    
-        <div className='dark'>
-        {isLoginModalOpen && <LoginSignupPopup isOpen={isLoginModalOpen} onClose={handleModalClose} />} 
+      </Head>
+      <div className="dark">
+        {isLoginModalOpen && (
+          <LoginSignupPopup
+            isOpen={isLoginModalOpen}
+            onClose={handleModalClose}
+          />
+        )}
       </div>
       {selectedConversation && (
         <main
@@ -328,7 +332,6 @@ const Home = ({
             <div className="flex flex-1">
               <Chat stopConversationRef={stopConversationRef} />
             </div>
-
           </div>
         </main>
       )}
@@ -341,7 +344,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const defaultModelId =
     (process.env.NEXT_PUBLIC_DEFAULT_MODEL &&
       Object.values(OpenAIModelID).includes(
-        process.env.NEXT_PUBLIC_DEFAULT_MODEL as OpenAIModelID,
+        process.env.NEXT_PUBLIC_DEFAULT_MODEL as OpenAIModelID
       ) &&
       process.env.NEXT_PUBLIC_DEFAULT_MODEL) ||
     fallbackModelID;

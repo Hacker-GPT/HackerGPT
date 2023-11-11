@@ -8,10 +8,10 @@ export const useLogOut = (onClose?: () => void) => {
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, user => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsUserLoggedIn(!!user);
     });
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   const clearConversations = () => {
@@ -40,4 +40,3 @@ export const useLogOut = (onClose?: () => void) => {
 
   return { isUserLoggedIn, handleLogOut };
 };
-

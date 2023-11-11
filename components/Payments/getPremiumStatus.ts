@@ -1,23 +1,23 @@
-import { FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { FirebaseApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import {
   collection,
   getFirestore,
   onSnapshot,
   query,
   where,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
 export const getPremiumStatus = async (app: FirebaseApp) => {
   const auth = getAuth(app);
   const userId = auth.currentUser?.uid;
-  if (!userId) throw new Error("User not logged in");
+  if (!userId) throw new Error('User not logged in');
 
   const db = getFirestore(app);
-  const subscriptionsRef = collection(db, "customers", userId, "subscriptions");
+  const subscriptionsRef = collection(db, 'customers', userId, 'subscriptions');
   const q = query(
     subscriptionsRef,
-    where("status", "in", ["trialing", "active"])
+    where('status', 'in', ['trialing', 'active'])
   );
 
   return new Promise<boolean>((resolve, reject) => {
