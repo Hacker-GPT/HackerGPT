@@ -21,7 +21,7 @@ We welcome the following types of contributions:
 
 To get started, fork the project on GitHub and clone it locally on your machine. Then, create a new branch to work on your changes.
 
-```
+```bash
 git clone https://github.com/Hacker-GPT/HackerGPT.git
 cd HackerGPT
 git checkout -b my-branch-name
@@ -39,6 +39,13 @@ Before submitting your pull request, please make sure your changes pass our auto
 5. Ensure that your changes adhere to our code style guidelines and pass our automated tests.
 6. Commit your changes and push them to your forked repository.
 7. Submit a pull request to the main branch of the main repository.
+
+**Format Code**
+
+Format the code with Prettier before submitting a pull request.
+```bash
+npm run format
+```
 
 ## Contact
 
