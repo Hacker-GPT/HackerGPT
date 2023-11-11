@@ -7,7 +7,15 @@ module.exports = {
   ],
   darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'hgpt-dark-gray': '#202123',
+        'hgpt-medium-gray': '#343541',
+        'hgpt-light-gray': '#444654',
+        'hgpt-chat-gray': '#40414F',
+        'hgpt-hover-white': '#dddddd',
+      },
+    },
   },
   variants: {
     extend: {
