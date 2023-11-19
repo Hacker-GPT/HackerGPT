@@ -32,6 +32,7 @@ export const getCheckoutUrl = async (app: FirebaseApp): Promise<string> => {
   const docRef = await addDoc(checkoutSessionRef, {
     price: priceId,
     billing_address_collection: 'auto',
+    allow_promotion_codes: true,
     success_url: window.location.origin,
     cancel_url: window.location.origin,
   });
