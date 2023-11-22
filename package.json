@@ -14,7 +14,7 @@
   "dependencies": {
     "@babel/traverse": "^7.23.2",
     "@dqbd/tiktoken": "^1.0.7",
-    "@tabler/icons-react": "^2.41.0",
+    "@tabler/icons-react": "^2.9.0",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/kv": "^0.2.3",
     "cheerio": "^1.0.0-rc.12",
@@ -33,7 +33,7 @@
     "react-query": "^3.39.3",
     "react-syntax-highlighter": "^15.5.0",
     "rehype-mathjax": "^4.0.2",
-    "remark-gfm": "^4.0.0",
+    "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
     "uuid": "^9.0.0"
   },
