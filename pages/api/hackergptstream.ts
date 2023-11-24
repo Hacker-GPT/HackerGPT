@@ -156,7 +156,7 @@ export const HackerGPTStream = async (
 
   const translateToEnglish = async (text: any) => {
     const requestBody = {
-      model: ['gryphe/mythomax-l2-13b'],
+      model: [`${process.env.SECRET_OPENROUTER_MODEL}`],
       messages: [
         {
           role: 'system',

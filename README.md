@@ -6,7 +6,7 @@ HackerGPT is your indispensable digital companion in the world of hacking. Craft
 
 When you ask a question, it's sent to our server. We verify user authenticity and manage the number of questions you can submit based on your user type (free or plus). Our next step is to search our database for information closely matching your question. If we find a strong match, we incorporate this into the AI's response process. Finally, your question is securely passed to either Google or OpenAI for processing. Importantly, we only send the question and previous ones from the same chat without any personal information. The response you receive varies based on the selected module:
 
-- **HackerGPT**: A tuned version of Palm 2 with semantic search on our data.
+- **HackerGPT**: A tuned version of gpt-3.5-turbo-1106 with semantic search on our data.
 - **GPT-4 Turbo**: The latest and greatest from OpenAI, paired with our unique prompt.
 
 ## Getting Started with HackerGPT Locally
@@ -25,11 +25,11 @@ npm i
 
 **3. Configure Environment Variables**
 
-Initialize your environment settings by creating a `.env.local` file in the project's root directory. Simply duplicate the `.env.local.example` file, rename it to `.env.local`, and then update the values with your specific configurations. For PALM 2 usage, you'll need to modify the following entries:
+Initialize your environment settings by creating a `.env.local` file in the project's root directory. Simply duplicate the `.env.local.example` file, rename it to `.env.local`, and then update the values with your specific configurations. For HackerGPT usage, you'll need to modify the following entries:
 
 ```bash
-SECRET_PALM2_CHAT_BISON_API_KEY=YOUR_OPENROUTER_API_KEY
-SECRET_PALM2_SYSTEM_PROMPT=YOUR_SYSTEM_PROMPT
+SECRET_OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+SECRET_OPENAI_SYSTEM_PROMPT=YOUR_SYSTEM_PROMPT
 ```
 
 **4. Run App**
