@@ -27,8 +27,6 @@ import { getPortalUrl } from '@/components/Payments/stripePayments';
 import { useLogOut } from '@/components/Authorization/LogOutButton';
 import { useRouter } from 'next/navigation';
 
-import firebase from '@/utils/server/firebase-client-init';
-
 import { ApiKey } from '@/types/api';
 
 interface Props {
@@ -74,11 +72,21 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
   const [keyCreated, setKeyCreated] = useState(false);
   const [userApiKeys, setUserApiKeys] = useState<ApiKey[]>([]);
 
+  const [createErrorMessage, setCreateErrorMessage] = useState('');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  const [revokeErrorMessage, setRevokeErrorMessage] = useState('');
+  const [isRevokeButtonDisabled, setIsRevokeButtonDisabled] = useState(false);
+
   const handleCreateNewKey = async () => {
     if (!auth.currentUser) {
-      console.error('User not authenticated');
+      setCreateErrorMessage('User not authenticated');
+      setIsButtonDisabled(false);
       return;
     }
+
+    setIsButtonDisabled(true);
+    setCreateErrorMessage('');
 
     const createApiKeyUrl = `${process.env.NEXT_PUBLIC_CREATE_API_KEY_FIREBASE_FUNCTION_URL}`;
 
@@ -95,45 +103,53 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
       });
 
       if (!response.ok) {
-        try {
-          const errorText = await response.text();
-          const errorMessage = errorText || `Error code: ${response.status}`;
-          console.error(`Error creating API key: ${errorMessage}`);
-        } catch (parseError) {
-          console.error(
-            `Error creating API key, status code: ${response.status}`
-          );
-        }
-        return;
+        const errorText = await response.text();
+        const errorMessage = errorText || `Error code: ${response.status}`;
+        setCreateErrorMessage(`Error creating API key: ${errorMessage}`);
+        setIsButtonDisabled(false);
+        return false;
       }
 
       const newKey = await response.json();
-
       const creationTime = new Date(newKey.created).toLocaleString();
 
       setNewToken(newKey.key);
       setShowTokenPopup(true);
       setKeyCreated(true);
-
       setUserApiKeys((prevKeys) => [
         ...prevKeys,
         { ...newKey, created: creationTime },
       ]);
+      return true;
     } catch (error) {
-      console.error('Error creating API key:', error);
+      if (error instanceof Error) {
+        setCreateErrorMessage('Failed to create key: ' + error.message);
+      } else {
+        setCreateErrorMessage(
+          'Failed to create key: An unknown error occurred'
+        );
+      }
+    } finally {
+      setIsButtonDisabled(false);
+      return false;
     }
   };
 
   const handleDeleteKey = async (keyId: string | undefined) => {
     if (!auth.currentUser) {
-      console.error('User not authenticated');
+      setRevokeErrorMessage('User not authenticated');
+      setIsRevokeButtonDisabled(false);
       return;
     }
 
     if (!keyId) {
-      console.error('Key ID is required');
+      setRevokeErrorMessage('Key ID is required');
+      setIsRevokeButtonDisabled(false);
       return;
     }
+
+    setIsRevokeButtonDisabled(true);
+    setRevokeErrorMessage('');
 
     const deleteApiKeyUrl = `${process.env.NEXT_PUBLIC_DELETE_API_KEY_FIREBASE_FUNCTION_URL}`;
 
@@ -150,25 +166,29 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
       });
 
       if (!response.ok) {
-        try {
-          const errorText = await response.text();
-          const errorMessage = errorText || `Error code: ${response.status}`;
-          console.error(`Error deleting API key: ${errorMessage}`);
-        } catch (parseError) {
-          console.error(
-            `Error deleting API key, status code: ${response.status}`
-          );
-        }
-        return;
+        const errorText = await response.text();
+        const errorMessage = errorText || `Error code: ${response.status}`;
+        setRevokeErrorMessage(`Error deleting API key: ${errorMessage}`);
+        setIsRevokeButtonDisabled(false);
+        return false;
       }
 
       await response.json();
       setUserApiKeys((prevKeys) => prevKeys.filter((key) => key.id !== keyId));
+      setIsRevokeButtonDisabled(false);
+      return true;
     } catch (error) {
-      console.error('Error deleting API key:', error);
+      if (error instanceof Error) {
+        setRevokeErrorMessage('Failed to delete key: ' + error.message);
+      } else {
+        setRevokeErrorMessage(
+          'Failed to delete key: An unknown error occurred'
+        );
+      }
+      setIsRevokeButtonDisabled(false);
+      return false;
     }
   };
-
   const fetchUserApiKeys = async () => {
     if (!auth.currentUser) {
       console.error('User not authenticated');
@@ -287,19 +307,27 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
   const [apiKeyToRevoke, setApiKeyToRevoke] = useState('');
   const [apicensoredKeyToRevoke, setcensoredKeyApiKeyToRevoke] = useState('');
 
+  const handleOpenCreateKeyModal = () => {
+    setCreateErrorMessage('');
+    setShowTokenPopup(true);
+  };
+
   const handleRevokeClick = (
     apiKey: SetStateAction<string>,
     censoredKey: string
   ) => {
     setApiKeyToRevoke(apiKey);
     setcensoredKeyApiKeyToRevoke(censoredKey);
+    setRevokeErrorMessage('');
     setShowRevokeModal(true);
   };
 
   const handleRevokeConfirm = async () => {
     if (apiKeyToRevoke) {
-      await handleDeleteKey(apiKeyToRevoke);
-      setShowRevokeModal(false);
+      const deletionSuccess = await handleDeleteKey(apiKeyToRevoke);
+      if (deletionSuccess) {
+        setShowRevokeModal(false);
+      }
     }
   };
 
@@ -522,7 +550,7 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                         <button
                           type="button"
                           className="mt-4 w-full rounded-lg bg-blue-500 px-4 py-2 text-white shadow hover:bg-blue-600 focus:outline-none"
-                          onClick={() => setShowTokenPopup(true)}
+                          onClick={handleOpenCreateKeyModal}
                         >
                           Create New Secret Key
                         </button>
@@ -557,12 +585,17 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                               placeholder="My Test Key"
                               value={keyName}
                               onChange={(e) => setKeyName(e.target.value)}
-                              className="mt-2 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray"
+                              className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray"
                             />
+                            {createErrorMessage && (
+                              <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-700">
+                                {createErrorMessage}
+                              </div>
+                            )}
                             <button
                               className="mt-4 w-full rounded bg-blue-500 py-2 px-4 text-white"
                               onClick={handleCreateNewKey}
-                              disabled={!keyName}
+                              disabled={!keyName || isButtonDisabled}
                             >
                               Create
                             </button>
@@ -572,7 +605,6 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                             <h2 className="mb-2 self-start text-sm text-black dark:text-white">
                               Your new key:
                             </h2>{' '}
-                            {/* Added self-start */}
                             <p className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray">
                               {newToken}
                             </p>
@@ -580,7 +612,6 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                               Please copy it now and write it down somewhere
                               safe. You will not be able to see it again.
                             </p>{' '}
-                            {/* Added self-start */}
                             <button
                               className="w-full rounded bg-blue-500 py-2 px-4 text-white"
                               onClick={() => {
@@ -613,6 +644,11 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                         <div className="mb-4 w-full rounded bg-hgpt-light-gray p-2 text-white dark:bg-hgpt-medium-gray">
                           {apicensoredKeyToRevoke}
                         </div>
+                        {revokeErrorMessage && (
+                          <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-700">
+                            {revokeErrorMessage}
+                          </div>
+                        )}
                         <div className="flex justify-end space-x-2">
                           <button
                             className="rounded bg-gray-300 py-2 px-4 text-black hover:bg-gray-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700"
@@ -623,6 +659,7 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                           <button
                             className="rounded bg-red-600 py-2 px-4 text-white hover:bg-red-700"
                             onClick={handleRevokeConfirm}
+                            disabled={isRevokeButtonDisabled}
                           >
                             Revoke key
                           </button>
