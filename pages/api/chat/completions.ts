@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { messages, model, max_tokens = 1000, temperature } = chatBody;
+    const { messages, model, max_tokens = 800, temperature } = chatBody;
     let { stream } = chatBody;
 
     if (stream === undefined) {
