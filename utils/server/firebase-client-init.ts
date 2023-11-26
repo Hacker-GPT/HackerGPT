@@ -2,8 +2,6 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import 'firebase/compat/functions';
-import 'firebase/compat/performance';
-import 'firebase/compat/analytics';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCQ8QlvMtQvpnj_7sfEIE8-YorcFOGlHCo',
@@ -17,11 +15,7 @@ const firebaseConfig = {
 
 let app: firebase.app.App;
 
-if (typeof window !== 'undefined' && !firebase.apps.length) {
-  app = firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
-  firebase.performance();
-} else if (!firebase.apps.length) {
+if (!firebase.apps.length) {
   app = firebase.initializeApp(firebaseConfig);
 } else {
   app = firebase.app();

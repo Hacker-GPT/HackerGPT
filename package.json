@@ -16,6 +16,7 @@
     "@dqbd/tiktoken": "^1.0.7",
     "@tabler/icons-react": "^2.41.0",
     "@upstash/ratelimit": "^0.4.4",
+    "@vercel/analytics": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "cheerio": "^1.0.0-rc.12",
     "eventsource-parser": "^0.1.0",
