@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const defaultTemperature = parseFloat(
-      process.env.HACKERGPT_TEMPERATURE || '0.6'
+      process.env.HACKERGPT_MODEL_TEMPERATURE || '0.4'
     );
     const temp = temperature ?? defaultTemperature;
 

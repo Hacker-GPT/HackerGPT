@@ -15,16 +15,16 @@ export const HackerGPTStream = async (
   enableStream: boolean
 ) => {
   const openAIUrl = `https://api.openai.com/v1/chat/completions`;
-  const openRouterUrl = `https://openrouter.ai/api/v1/chat/completions`;
-
   const openAIHeaders = {
     Authorization: `Bearer ${process.env.SECRET_OPENAI_API_KEY}`,
     'Content-Type': 'application/json',
   };
+  const openRouterUrl = `https://openrouter.ai/api/v1/chat/completions`;
 
   let cleanedMessages = [];
-
   const MESSAGE_USAGE_CAP_WARNING = "Hold On! You've Hit Your Usage Cap.";
+
+  const usePinecone = process.env.USE_PINECONE === 'TRUE';
   const MIN_LAST_MESSAGE_LENGTH = parseInt(
     process.env.MIN_LAST_MESSAGE_LENGTH || '50',
     10
@@ -33,6 +33,8 @@ export const HackerGPTStream = async (
     process.env.MAX_LAST_MESSAGE_LENGTH || '1000',
     10
   );
+  const pineconeTemperature =
+    parseFloat(process.env.PINECONE_MODEL_TEMPERATURE ?? '0.7') || 0.7;
 
   for (let i = 0; i < messages.length - 1; i++) {
     const message = messages[i];
@@ -152,8 +154,6 @@ export const HackerGPTStream = async (
       return 'None';
     }
   };
-
-  const usePinecone = process.env.USE_PINECONE === 'TRUE';
 
   let systemMessage: Message = {
     role: 'system',
@@ -366,6 +366,8 @@ export const HackerGPTStream = async (
     const pineconeResults = await queryPineconeVectorStore(lastMessageContent);
 
     if (pineconeResults !== 'None') {
+      modelTemperature = pineconeTemperature;
+
       systemMessage.content =
         `${process.env.SECRET_OPENAI_SYSTEM_PROMPT} ` +
         `${process.env.SECRET_PINECONE_SYSTEM_PROMPT}` +

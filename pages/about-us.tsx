@@ -23,15 +23,15 @@ const AboutUs = () => {
               How does HackerGPT work?
             </h3>
             <p className="mb-4 text-lg">
-              When you ask a question, it&apos;s sent to our server. We verify user
-              authenticity and manage your question quota based on whether
+              When you ask a question, it&apos;s sent to our server. We verify
+              user authenticity and manage your question quota based on whether
               you&apos;re a free or plus user. We then search our database for
               information that closely matches your question. For questions not
               in English, we translate them to find relevant information from
-              our database. If a strong match is found, it&apos;s incorporated into
-              the AI&apos;s response process. Your question is then securely passed
-              to OpenAI for processing, with no personal information sent.
-              Responses vary based on the module:
+              our database. If a strong match is found, it&apos;s incorporated
+              into the AI&apos;s response process. Your question is then
+              securely passed to OpenAI for processing, with no personal
+              information sent. Responses vary based on the module:
             </p>
             <ul className="ml-8 list-disc space-y-2">
               <li>

@@ -52,9 +52,9 @@ const handler = async (req: Request): Promise<Response> => {
     max_tokens = max_tokens || 1000;
     stream = stream || true;
 
-    const defaultTemperature = process.env.HACKERGPT_TEMPERATURE
-      ? parseFloat(process.env.HACKERGPT_TEMPERATURE)
-      : 0.6;
+    const defaultTemperature = process.env.HACKERGPT_MODEL_TEMPERATURE
+      ? parseFloat(process.env.HACKERGPT_MODEL_TEMPERATURE)
+      : 0.4;
     temperature = temperature ?? defaultTemperature;
 
     const tokenLimit = getTokenLimit(model);
