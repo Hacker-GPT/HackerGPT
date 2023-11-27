@@ -19,7 +19,7 @@
     "@vercel/analytics": "^1.1.1",
     "@vercel/kv": "^0.2.3",
     "cheerio": "^1.0.0-rc.12",
-    "eventsource-parser": "^0.1.0",
+    "eventsource-parser": "^1.1.1",
     "firebase": "^10.5.0",
     "i18next": "^22.5.1",
     "langchain": "^0.0.184",
