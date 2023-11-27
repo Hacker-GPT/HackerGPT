@@ -25,8 +25,14 @@ export const HackerGPTStream = async (
   let cleanedMessages = [];
 
   const MESSAGE_USAGE_CAP_WARNING = "Hold On! You've Hit Your Usage Cap.";
-  const MIN_LAST_MESSAGE_LENGTH = 30;
-  const MAX_LAST_MESSAGE_LENGTH = 3000;
+  const MIN_LAST_MESSAGE_LENGTH = parseInt(
+    process.env.MIN_LAST_MESSAGE_LENGTH || '50',
+    10
+  );
+  const MAX_LAST_MESSAGE_LENGTH = parseInt(
+    process.env.MAX_LAST_MESSAGE_LENGTH || '1000',
+    10
+  );
 
   for (let i = 0; i < messages.length - 1; i++) {
     const message = messages[i];
