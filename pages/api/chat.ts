@@ -1,4 +1,5 @@
 import { OpenAIError, OpenAIStream } from '@/pages/api/openaistream';
+import { fetchGoogleSearchResults, processGoogleResults, createAnswerPromptGoogle} from '@/pages/api/google';
 import { HackerGPTStream } from '@/pages/api/hackergptstream';
 import { ChatBody, Message } from '@/types/chat';
 
@@ -7,12 +8,7 @@ import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module
 
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
-import { GoogleSource } from '@/types/google';
-
 import endent from 'endent';
-
-// @ts-ignore
-import cheerio from 'cheerio';
 
 export const config = {
   runtime: 'edge',
@@ -45,9 +41,19 @@ const getTokenLimit = (model: string) => {
 
 const handler = async (req: Request): Promise<Response> => {
   try {
+    const useWebBrowsingPlugin = process.env.USE_WEB_BROWSING_PLUGIN === 'TRUE';
+    if (!useWebBrowsingPlugin) {
+      return new Response(
+          'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
+          { status: 200, headers: corsHeaders }
+      );
+    }
+    
     const authToken = req.headers.get('Authorization');
     let { messages, model, max_tokens, temperature, stream } =
       (await req.json()) as ChatBody;
+    
+    let answerMessage: Message = { role: 'user', content: '' };
 
     max_tokens = max_tokens || 1000;
     stream = stream || true;
@@ -82,6 +88,11 @@ const handler = async (req: Request): Promise<Response> => {
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
     let messagesToSend: Message[] = [];
+    let startIndex = 0; 
+
+    if (model === ModelType.GoogleBrowsing) {
+      startIndex = 1; 
+    }
 
     const lastMessage = messages[messages.length - 1];
     const lastMessageTokens = encoding.encode(lastMessage.content);
@@ -93,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     tokenCount += lastMessageTokens.length;
 
-    for (let i = messages.length - 1; i >= 0; i--) {
+    for (let i = messages.length - 1 - startIndex; i >= 0; i--) {
       const message = messages[i];
       const tokens = encoding.encode(message.content);
 
@@ -133,163 +144,140 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    let googleSources: GoogleSource[] = [];
-    let answerMessage: Message = { role: 'user', content: '' };
-
-    const useWebBrowsingPlugin = process.env.USE_WEB_BROWSING_PLUGIN === 'TRUE';
-
-    if (model === ModelType.GoogleBrowsing && !useWebBrowsingPlugin) {
-      return new Response(
-        'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
-        { status: 200, headers: corsHeaders }
-      );
-    }
-
     if (model === ModelType.GoogleBrowsing) {
-      const query = encodeURIComponent(
-        messagesToSend[messagesToSend.length - 1].content.trim()
-      );
+      const query = lastMessage.content.trim()
+      const googleData = await fetchGoogleSearchResults(query);
+      const sourceTexts = await processGoogleResults(googleData, tokenLimit, tokenCount);
 
-      const googleRes = await fetch(
-        `https://customsearch.googleapis.com/customsearch/v1?key=${process.env.SECRET_GOOGLE_API_KEY}&cx=${process.env.SECRET_GOOGLE_CSE_ID}&q=${query}&num=5`
-      );
-
-      if (!googleRes.ok) {
-        console.error('Error from Google API:', await googleRes.text());
-        return new Response('Google API returned an error.', {
-          headers: corsHeaders,
-        });
-      }
-
-      const googleData = await googleRes.json();
-
-      if (googleData && googleData.items) {
-        googleSources = googleData.items.map((item: any) => ({
-          title: item.title,
-          link: item.link,
-          displayLink: item.displayLink,
-          snippet: item.snippet,
-          image: item.pagemap?.cse_image?.[0]?.src,
-          text: '',
-        }));
-      } else {
-        googleSources = [];
-      }
-
-      const textDecoder = new TextDecoder();
-
-      const sourcesWithText: any = await Promise.all(
-        googleSources.map(async (source) => {
-          try {
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Request timed out')), 5000)
-            );
-
-            const res = (await Promise.race([
-              fetch(source.link), // <-- Replaced axios.get with fetch
-              timeoutPromise,
-            ])) as Response;
-
-            if (!res || !res.ok) {
-              // <-- Check if response is okay
-              console.error('Invalid response:', res);
-              throw new Error('Invalid response');
-            }
-
-            const textData = await res.text(); // <-- Extract text from response
-            const $ = cheerio.load(textData); // <-- Load text into cheerio
-            const sourceText = $('body').text().trim();
-
-            // Limit the text to 400 tokens
-            let encodedText = encoding.encode(sourceText);
-            if (encodedText.length > 400) {
-              encodedText = encodedText.slice(0, 400);
-            }
-
-            return {
-              ...source,
-              text: textDecoder.decode(encoding.decode(encodedText)),
-            } as GoogleSource;
-          } catch (error) {
-            console.error('Caught an error:', error);
-            return null;
-          }
-        })
-      );
-
-      // Filter out null sources
-      const filteredSources: GoogleSource[] = sourcesWithText.filter(Boolean);
-
-      let sourceTexts: string[] = [];
-      let tokenSizeTotalForGoogle = 0;
-
-      // Calculate available tokens for Google Sources and completion
-      const availableTokens = tokenLimit - tokenCount - reservedTokens; // 2000 for completion
-
-      // Loop through each Google source and add it if it doesn't exceed the available tokens
-      for (const source of filteredSources) {
-        const decodedLink = decodeURIComponent(source.link);
-        const text = endent`
-            ${source.title} (${decodedLink}):
-            ${source.snippet}
-            `;
-        const tokenSize = encoding.encode(text).length;
-
-        if (tokenSizeTotalForGoogle + tokenSize <= availableTokens) {
-          sourceTexts.push(text);
-          tokenSizeTotalForGoogle += tokenSize;
-        } else {
-          break; // Stop adding more Google sources if it exceeds the available tokens
-        }
-      }
-
-      const answerPrompt = endent`
-          Answer the following questions as best you can. Pretend to utilize a "Programmable Search Engine" functionality to fetch and verify data from the web. Use the provided "sources" to give an accurate, role-played response. Respond in markdown format. Cite the "sources" you "used" as a markdown link at the end of each sentence by the number of the "source" (ex: [[1]](link.com)). Provide an accurate role-played response and then stop. Today's date is ${new Date().toLocaleDateString()}.
-          
-          Example Input:
-          What's the weather in San Francisco today?
-          
-          Example "Sources":
-          [Weather in San Francisco](https://www.google.com/search?q=weather+san+francisco)
-          
-          Example Role-played Response:
-          It's 70 degrees and sunny in San Francisco today. [[1]](https://www.google.com/search?q=weather+san+francisco)
-          
-          Input:
-          ${query.trim()}
-          
-          "Sources":
-          ${sourceTexts}
-          
-          Role-played Response:
-          `;
-
+      const answerPrompt = createAnswerPromptGoogle(query, sourceTexts);
       answerMessage = { role: 'user', content: answerPrompt };
     }
 
     encoding.free();
-
-    if (userStatusOk) {
-      let streamResult;
-      if (model === ModelType.GPT35TurboInstruct) {
-        streamResult = await HackerGPTStream(
-          messagesToSend,
-          temperature,
-          max_tokens,
-          stream
-        );
-      } else {
-        streamResult = await OpenAIStream(model, messagesToSend, answerMessage);
+    
+    if (userStatusOk && lastMessage.content.startsWith("subfinder -d")) {
+      // Subfinder command handling
+      const parts = lastMessage.content.split(" ");
+      const domainIndex = parts.findIndex(part => part === '-d') + 1;
+      const domain = parts[domainIndex];
+      
+      const protocol = req.headers.get('x-forwarded-proto') || 'http';
+      const host = req.headers.get('host');
+      if (!host) {
+        return new Response('Could not determine the request host', { status: 500 });
       }
+  
+      const subfinderUrl = `${protocol}://${host}/api/subfinder?domain=${domain}&concurrency=30`;  
+        
+      const headers = new Headers(corsHeaders);
+      headers.set('Content-Type', 'text/event-stream');
+      headers.set('Cache-Control', 'no-cache');
+      headers.set('Connection', 'keep-alive');
+  
+      const stream = new ReadableStream({
+        async start(controller) {
+          const sendMessage = (data: string, addExtraLineBreaks: boolean = false) => {
+            const formattedData = addExtraLineBreaks ? `${data}\n\n` : data;
+            controller.enqueue(new TextEncoder().encode(formattedData));
+          };
+      
+          sendMessage('Starting Subfinder process...', true);
+      
+          const intervalId = setInterval(() => {
+            sendMessage('Still processing. Please wait...', true);
+          }, 5000);
+      
+          try {
+            
+            const subfinderResponse = await fetch(subfinderUrl);
+            let subfinderData = await subfinderResponse.text();
+      
+            // Process the subfinder data to extract only domain names
+            subfinderData = processSubfinderData(subfinderData);
+            
+            let additionalNote = '';
+            if (subfinderData.length > 5000) {
+              subfinderData = subfinderData.slice(0, 5000);
+              additionalNote = '\n\nNote: The list of subdomains has been truncated due to length.';
+            }
+            
+            clearInterval(intervalId);
+            sendMessage('Subfinder process completed.', true);  
+      
+            const messageContent = endent`
+            The list of subdomains identified by the 'subfinder' scan for "${domain}" is provided below. You should provide formatted list in a code block for easy copy-pasting with domains in response is requirement, than as addition to scan facilitating thorough review and further security analysis. 
 
-      return new Response(streamResult, {
-        headers: corsHeaders,
-      });
+            ### Subfinder Scan Results for "${domain}"
+            **Date and Time of Scan**: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+                        
+            Identified Subdomains:
+            
+            \`\`\`
+            ${subfinderData}
+            \`\`\`
+            ${additionalNote}
+
+            ### Key Highlights
+            
+            While the list is extensive, here are a few subdomains that may warrant special attention based on their names or presumed functions. These highlights are not exhaustive and are provided to assist in prioritizing initial areas of focus:
+            
+            - [List a few subdomains from "Identified Subdomain" that stand out, if any, and briefly mention why they might be particularly noteworthy or warrant further investigation.]            
+            
+            This analysis should serve as an initial guide for subsequent in-depth security evaluations of the listed subdomains.
+            `;
+            answerMessage.content = messageContent;
+      
+            const openAIResponseStream = await OpenAIStream(model, messagesToSend, answerMessage);
+            const reader = openAIResponseStream.getReader();
+      
+            // @ts-expect-error
+            reader.read().then(function processText({ done, value }) {
+              if (done) {
+                controller.close();
+                return;
+              }
+      
+              const decodedValue = new TextDecoder().decode(value, { stream: true });
+              sendMessage(decodedValue);
+      
+              return reader.read().then(processText);
+            });
+      
+          } catch (error) {
+            console.error('Error fetching from subfinder:', error);
+            clearInterval(intervalId);
+
+            const errorMessage = (error as Error).message;
+            sendMessage(`Error: ${errorMessage}`, true);
+          }
+        }
+      });      
+      
+      return new Response(stream, { headers });
     } else {
-      return new Response('An unexpected error occurred', {
-        status: 500,
-        headers: corsHeaders,
-      });
+    
+      if (userStatusOk) {
+        let streamResult;
+        if (model === ModelType.GPT35TurboInstruct) {
+          streamResult = await HackerGPTStream(
+            messagesToSend,
+            temperature,
+            max_tokens,
+            stream
+          );
+        } else {
+          streamResult = await OpenAIStream(model, messagesToSend, answerMessage);
+        }
+
+        return new Response(streamResult, {
+          headers: corsHeaders,
+        });
+      } else {
+        return new Response('An unexpected error occurred', {
+          status: 500,
+          headers: corsHeaders,
+        });
+      }
     }
   } catch (error) {
     console.error('An error occurred:', error);
@@ -307,5 +295,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
   }
 };
+
+function processSubfinderData(data: string): string {
+  return data
+    .split('\n')
+    .filter(line => line && !line.startsWith('data:') && line.trim() !== '')
+    .join(''); 
+}
+
 
 export default handler;
