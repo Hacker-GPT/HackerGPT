@@ -47,7 +47,6 @@ export const OpenAIStream = async (
     stream: true,
   };
 
-  console.log(answerMessage)
   if (model === 'gpt-3.5-turbo') {
     commonBody['messages'] = [
       {
@@ -63,7 +62,6 @@ export const OpenAIStream = async (
     }
   }
 
-  console.log(commonBody)
   const requestOptions = {
     method: 'POST',
     headers: {

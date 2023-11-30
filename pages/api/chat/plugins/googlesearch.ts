@@ -3,7 +3,7 @@ import cheerio from 'cheerio';
 import endent from 'endent';
 
 // @ts-expect-error
-import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
+import wasm from '../../../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
@@ -23,7 +23,7 @@ const fetchGoogleSearchResults = async (query: string) => {
   };
 
 const processGoogleResults = async (googleData: { items: { title: any; link: any; displayLink: any; snippet: any; pagemap: { cse_image: { src: any; }[]; }; }[]; }, tokenLimit: number, tokenCount: number) => {
-    await init((imports) => WebAssembly.instantiate(wasm, imports));
+  await init((imports) => WebAssembly.instantiate(wasm, imports));
     const encoding = new Tiktoken(
       tiktokenModel.bpe_ranks,
       tiktokenModel.special_tokens,

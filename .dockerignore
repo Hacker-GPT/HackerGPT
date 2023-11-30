@@ -1,0 +1,57 @@
+# Dependency directories
+node_modules
+/.node_modules
+/node_modules
+
+npm-debug.log
+
+/linux-amd64
+
+google-cloud-sdk
+/google-cloud-sdk
+/.google-cloud-sdk
+
+# Build output
+/dist
+/.next
+/out
+
+# Git directory
+.git
+/.github
+.gitignore
+
+# IDE/Editor files
+.idea
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+*.vscode
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+.idea
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Test directories
+__tests__
+__mocks__
+
+# Configuration files
+.env.development.local
+.env.test.local
+.env.production.local

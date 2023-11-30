@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -20,6 +18,12 @@
 # misc
 .DS_Store
 *.pem
+/linux-amd64
+certificate.yaml
+deployment.yaml
+service.yaml
+ingress.yaml
+letsencrypt-clusterissuer.yaml
 
 # debug
 npm-debug.log*
@@ -37,3 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .idea
+
+# google-cloud-sdk
+/google-cloud-sdk
