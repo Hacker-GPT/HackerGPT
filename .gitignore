@@ -24,6 +24,7 @@ deployment.yaml
 service.yaml
 ingress.yaml
 letsencrypt-clusterissuer.yaml
+clusterissuer.yaml
 
 # debug
 npm-debug.log*

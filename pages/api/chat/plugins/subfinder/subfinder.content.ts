@@ -33,7 +33,7 @@ const createAnswerPromptSubfinder = (domain: string, subfinderData: string) => {
 
     Report Template:
 
-    ## Subfinder Scan Summary for "${domain}"
+    ## [Subfinder](https://github.com/projectdiscovery/subfinder) Scan Summary for "${domain}"
     **Scan Date and Time**: ${formattedDateTime}
 
     ### Identified Subdomains:
