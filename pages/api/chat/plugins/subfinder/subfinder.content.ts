@@ -86,6 +86,9 @@ const parseCommandLine = (input: string) => {
     error: null,
   };
 
+  const maxDomainLength = 50;
+  const maxSubdomainLength = 255;
+
   const isValidDomain = (domain: string) => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain);
   const isValidSubdomain = (subdomain: string) => /^[a-zA-Z0-9.-]+$/.test(subdomain);
 
@@ -95,10 +98,10 @@ const parseCommandLine = (input: string) => {
       case '-domain':
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const domain = args[++i];
-          if (isValidDomain(domain)) {
+          if (isValidDomain(domain) && domain.length <= maxDomainLength) {
             params.domain.push(domain);
           } else {
-            params.error = 'Invalid domain provided';
+            params.error = `Invalid or too long domain provided (max ${maxDomainLength} characters)`;
             return params;
           }
         }
@@ -107,10 +110,10 @@ const parseCommandLine = (input: string) => {
       case '-match':
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const match = args[++i];
-          if (isValidSubdomain(match)) {
+          if (isValidSubdomain(match) && match.length <= maxSubdomainLength) {
             params.match.push(match);
           } else {
-            params.error = 'Invalid match pattern provided';
+            params.error = `Invalid or too long match pattern provided (max ${maxSubdomainLength} characters)`;
             return params;
           }
         }
@@ -119,10 +122,10 @@ const parseCommandLine = (input: string) => {
       case '-filter':
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
           const filter = args[++i];
-          if (isValidSubdomain(filter)) {
+          if (isValidSubdomain(filter) && filter.length <= maxSubdomainLength) {
             params.filter.push(filter);
           } else {
-            params.error = 'Invalid filter pattern provided';
+            params.error = `Invalid or too long filter pattern provided (max ${maxSubdomainLength} characters)`;
             return params;
           }
         }
@@ -137,7 +140,7 @@ const parseCommandLine = (input: string) => {
   return params;
 };
   
-  export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: HeadersInit | undefined, enableSubfinderFeature: boolean, OpenAIStream: { (model: string, messages: Message[], answerMessage: Message): Promise<ReadableStream<any>>; (arg0: any, arg1: any, arg2: any): any; }, model: string, messagesToSend: Message[], answerMessage: Message) {
+export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: HeadersInit | undefined, enableSubfinderFeature: boolean, OpenAIStream: { (model: string, messages: Message[], answerMessage: Message): Promise<ReadableStream<any>>; (arg0: any, arg1: any, arg2: any): any; }, model: string, messagesToSend: Message[], answerMessage: Message) {
     if (!enableSubfinderFeature) {
       return new Response(
         'The Subfinder feature is disabled.',
