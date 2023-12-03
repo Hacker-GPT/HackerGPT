@@ -64,10 +64,9 @@ const displayHelpGuide = () => {
     FILTER:
       -m, -match string[]   subdomain or list of subdomain to match (comma separated)
       -f, -filter string[]   subdomain or list of subdomain to filter (comma separated)
-  
+
     OUTPUT:
-      -oI, -ip   include host IP in output (-active only)
-  `;
+      -cs, -collect-sources   include all sources in the output (-json only)  `;
 };
 
 const parseCommandLine = (input: string) => {
@@ -76,13 +75,13 @@ const parseCommandLine = (input: string) => {
     domain: string[],
     match: string[],
     filter: string[],
-    includeIP: boolean,
+    includeSources: boolean,
     error: string | null,
   } = {
     domain: [],
     match: [],
     filter: [],
-    includeIP: false,
+    includeSources: false,
     error: null,
   };
 
@@ -130,9 +129,9 @@ const parseCommandLine = (input: string) => {
           }
         }
         break;
-      case '-oI':
-      case '-ip':
-        params.includeIP = true;
+      case '-cs':
+      case '--collect-sources':
+        params.includeSources = true;
         break;
     }
   }
@@ -163,7 +162,7 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
     subfinderUrl += params.domain.map(d => `domain=${d}`).join('&');
     subfinderUrl += params.match.map(m => `&match=${m}`).join('');
     subfinderUrl += params.filter.map(f => `&filter=${f}`).join('');
-    subfinderUrl += params.includeIP ? '&includeIP=false' : '';
+    subfinderUrl += params.includeSources ? '&includeSources=false' : '';
   
     const headers = new Headers(corsHeaders);
     headers.set('Content-Type', 'text/event-stream');

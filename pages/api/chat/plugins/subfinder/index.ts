@@ -13,6 +13,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         includeIP, 
     } = req.query;
 
+    const requestHost = req.headers.host;
+
+    if (!requestHost || !(requestHost.endsWith('.hackergpt.co') || requestHost.endsWith('.hackergpt.chat'))) {
+        res.status(403).json({ message: 'Forbidden: Access is denied from this domain.' });
+        return;
+    }
+
     const authHeader = req.headers.authorization;
     const expectedAuthValue = process.env.SECRET_AUTH_SUBFINDER
 
@@ -23,7 +30,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     let subfinderOutput = '';
 
-    let command = `subfinder -d ${domain} -t 30 -json`;
+    let command = `subfinder -d ${domain} -t 30 -max-time 1 -json`;
 
     if (match) {
         command += ` -m ${Array.isArray(match) ? match.join(',') : match}`;
@@ -32,7 +39,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         command += ` -f ${Array.isArray(filter) ? filter.join(',') : filter}`;
     }
     if (includeIP === 'true') {
-        command += ' -oI';
+        command += ' -cs';
     }
         
     res.setHeader('Content-Type', 'text/event-stream');
