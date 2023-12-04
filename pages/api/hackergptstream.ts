@@ -356,22 +356,25 @@ export const HackerGPTStream = async (
 
     if (
       lastMessageContent.length > MIN_LAST_MESSAGE_LENGTH &&
-      lastMessageContent.length < MAX_LAST_MESSAGE_LENGTH &&
-      (await isEnglish(lastMessageContent)) === false
+      lastMessageContent.length < MAX_LAST_MESSAGE_LENGTH
     ) {
-      const translatedContent = await translateToEnglish(lastMessageContent);
-      lastMessageContent = translatedContent;
-    }
+      if ((await isEnglish(lastMessageContent)) === false) {
+        const translatedContent = await translateToEnglish(lastMessageContent);
+        lastMessageContent = translatedContent;
+      }
 
-    const pineconeResults = await queryPineconeVectorStore(lastMessageContent);
+      const pineconeResults = await queryPineconeVectorStore(
+        lastMessageContent
+      );
 
-    if (pineconeResults !== 'None') {
-      modelTemperature = pineconeTemperature;
+      if (pineconeResults !== 'None') {
+        modelTemperature = pineconeTemperature;
 
-      systemMessage.content =
-        `${process.env.SECRET_OPENAI_SYSTEM_PROMPT} ` +
-        `${process.env.SECRET_PINECONE_SYSTEM_PROMPT}` +
-        `Context:\n ${pineconeResults}`;
+        systemMessage.content =
+          `${process.env.SECRET_OPENAI_SYSTEM_PROMPT} ` +
+          `${process.env.SECRET_PINECONE_SYSTEM_PROMPT}` +
+          `Context:\n ${pineconeResults}`;
+      }
     }
   }
 
