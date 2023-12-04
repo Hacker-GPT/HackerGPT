@@ -8,7 +8,16 @@ const isSubfinderCommand = (message: string) => {
   return commandPattern.test(message);
 };
 
-const createAnswerPromptSubfinder = (domain: string, subfinderData: string) => {
+const createAnswerPromptSubfinder = (domain: string, includeSources: boolean, subfinderData: string) => {
+
+    console.log(includeSources);
+    let firstStepInstruction = '1. **Identify and List Subdomains**: Present a clear list of all identified subdomains ';
+
+    if (includeSources) {
+        firstStepInstruction += 'with sources like this for example "hackergpt.co,[digitorus,crtsh]" ';
+    }
+
+    firstStepInstruction += 'in code block. Just each domain on new line.';
 
     let additionalNote = '';
     let instructionsForAdditionalNote = '';
@@ -25,7 +34,7 @@ const createAnswerPromptSubfinder = (domain: string, subfinderData: string) => {
     Generate a comprehensive report for the Subfinder scan conducted on the domain "${domain}". The report should be clear, concise, and user-friendly, highlighting key findings and insights for easy interpretation. Assume that the Subfinder tool has already completed the scan and provided detailed data on subdomains. Your task is to analyze this data and present it in a structured format.
     
     Instructions:
-    1. **Identify and List Subdomains**: Present a clear list of all identified subdomains in code block. Just each domain on new line.
+    ${firstStepInstruction}
     ${instructionsForAdditionalNote}
     2. **Highlight Key Observations**: Analyze the subdomains for any notable characteristics or security implications. Focus on aspects like unusual subdomain patterns, potential security risks, or subdomains that may need immediate attention.
     3. **Provide Insightful Analysis**: Offer insights based on the subdomains' structure, naming conventions, and other relevant details derived from the scan.
@@ -187,6 +196,7 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
             method: 'GET',
             headers: {
               'Authorization': `${process.env.SECRET_AUTH_SUBFINDER}`,
+              Header: "example.google.com"
           },
           });
 
@@ -201,8 +211,8 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
           
           clearInterval(intervalId);
           sendMessage('Subfinder process completed.', true);  
-          
-          const answerPrompt = createAnswerPromptSubfinder(params.domain.join(', '), subfinderData);
+ 
+          const answerPrompt = createAnswerPromptSubfinder(params.domain.join(', '), params.includeSources, subfinderData);
           answerMessage.content = answerPrompt;
     
           const openAIResponseStream = await OpenAIStream(model, messagesToSend, answerMessage);

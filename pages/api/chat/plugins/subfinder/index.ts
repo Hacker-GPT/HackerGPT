@@ -10,7 +10,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         domain, 
         match, 
         filter, 
-        includeIP, 
+        includeSources, 
     } = req.query;
 
     const requestHost = req.headers.host;
@@ -38,7 +38,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (filter) {
         command += ` -f ${Array.isArray(filter) ? filter.join(',') : filter}`;
     }
-    if (includeIP === 'true') {
+    if (includeSources === 'true') {
         command += ' -cs';
     }
         
