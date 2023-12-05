@@ -10,7 +10,6 @@ const isSubfinderCommand = (message: string) => {
 
 const createAnswerPromptSubfinder = (domain: string, includeSources: boolean, subfinderData: string) => {
 
-    console.log(includeSources);
     let firstStepInstruction = '1. **Identify and List Subdomains**: Present a clear list of all identified subdomains ';
 
     if (includeSources) {

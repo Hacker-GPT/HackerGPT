@@ -8,8 +8,15 @@ import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
 
-import { fetchGoogleSearchResults, processGoogleResults, createAnswerPromptGoogle} from '@/pages/api/chat/plugins/googlesearch';
-import { isSubfinderCommand, handleSubfinderRequest, } from '@/pages/api/chat/plugins/subfinder/subfinder.content';
+import {
+  fetchGoogleSearchResults,
+  processGoogleResults,
+  createAnswerPromptGoogle,
+} from '@/pages/api/chat/plugins/googlesearch';
+import {
+  isSubfinderCommand,
+  handleSubfinderRequest,
+} from '@/pages/api/chat/plugins/subfinder/subfinder.content';
 
 export const config = {
   runtime: 'edge',
@@ -43,12 +50,13 @@ const getTokenLimit = (model: string) => {
 const handler = async (req: Request): Promise<Response> => {
   try {
     const useWebBrowsingPlugin = process.env.USE_WEB_BROWSING_PLUGIN === 'TRUE';
-    const enableSubfinderFeature = process.env.ENABLE_SUBFINDER_FEATURE === 'TRUE';
-    
+    const enableSubfinderFeature =
+      process.env.ENABLE_SUBFINDER_FEATURE === 'TRUE';
+
     const authToken = req.headers.get('Authorization');
     let { messages, model, max_tokens, temperature, stream } =
       (await req.json()) as ChatBody;
-    
+
     let answerMessage: Message = { role: 'user', content: '' };
 
     max_tokens = max_tokens || 1000;
@@ -84,10 +92,10 @@ const handler = async (req: Request): Promise<Response> => {
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
     let messagesToSend: Message[] = [];
-    let startIndex = 0; 
+    let startIndex = 0;
 
     if (model === ModelType.GoogleBrowsing) {
-      startIndex = 1; 
+      startIndex = 1;
     }
 
     const lastMessage = messages[messages.length - 1];
@@ -141,31 +149,35 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (userStatusOk && model === ModelType.GoogleBrowsing) {
-      if (!useWebBrowsingPlugin ) {
+      if (!useWebBrowsingPlugin) {
         return new Response(
-            'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
-            { status: 200, headers: corsHeaders }
+          'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
+          { status: 200, headers: corsHeaders }
         );
       }
 
-      const query = lastMessage.content.trim()
+      const query = lastMessage.content.trim();
       const googleData = await fetchGoogleSearchResults(query);
-      const sourceTexts = await processGoogleResults(googleData, tokenLimit, tokenCount);
+      const sourceTexts = await processGoogleResults(
+        googleData,
+        tokenLimit,
+        tokenCount
+      );
 
       const answerPrompt = createAnswerPromptGoogle(query, sourceTexts);
       answerMessage.content = answerPrompt;
     }
 
     encoding.free();
-    
+
     if (userStatusOk && isSubfinderCommand(lastMessage.content)) {
       return await handleSubfinderRequest(
-        lastMessage, 
-        corsHeaders, 
-        enableSubfinderFeature, 
-        OpenAIStream, 
-        model, 
-        messagesToSend, 
+        lastMessage,
+        corsHeaders,
+        enableSubfinderFeature,
+        OpenAIStream,
+        model,
+        messagesToSend,
         answerMessage
       );
     } else {
@@ -179,7 +191,11 @@ const handler = async (req: Request): Promise<Response> => {
             stream
           );
         } else {
-          streamResult = await OpenAIStream(model, messagesToSend, answerMessage);
+          streamResult = await OpenAIStream(
+            model,
+            messagesToSend,
+            answerMessage
+          );
         }
 
         return new Response(streamResult, {
