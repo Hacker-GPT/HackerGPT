@@ -108,7 +108,7 @@ const parseCommandLine = (input: string) => {
           if (isValidDomain(domain) && domain.length <= maxDomainLength) {
             params.domain.push(domain);
           } else {
-            params.error = `Invalid or too long domain provided (max ${maxDomainLength} characters)`;
+            params.error = `🚨 Invalid or too long domain provided (max ${maxDomainLength} characters)`;
             return params;
           }
         }
@@ -120,7 +120,7 @@ const parseCommandLine = (input: string) => {
           if (isValidSubdomain(match) && match.length <= maxSubdomainLength) {
             params.match.push(match);
           } else {
-            params.error = `Invalid or too long match pattern provided (max ${maxSubdomainLength} characters)`;
+            params.error = `🚨 Invalid or too long match pattern provided (max ${maxSubdomainLength} characters)`;
             return params;
           }
         }
@@ -132,7 +132,7 @@ const parseCommandLine = (input: string) => {
           if (isValidSubdomain(filter) && filter.length <= maxSubdomainLength) {
             params.filter.push(filter);
           } else {
-            params.error = `Invalid or too long filter pattern provided (max ${maxSubdomainLength} characters)`;
+            params.error = `🚨 Invalid or too long filter pattern provided (max ${maxSubdomainLength} characters)`;
             return params;
           }
         }
@@ -184,10 +184,10 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
           controller.enqueue(new TextEncoder().encode(formattedData));
         };
     
-        sendMessage('Starting Subfinder process...', true);
+        sendMessage('🚀 Starting the scan. It might take a minute.', true);
     
         const intervalId = setInterval(() => {
-          sendMessage('Still processing. Please wait...', true);
+          sendMessage('⏳ Still working on it, please hold on...', true);
         }, 5000);
 
         try {
@@ -204,12 +204,15 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
           subfinderData = processSubfinderData(subfinderData);
           
           if (subfinderData.length === 0) {
-            const noDataMessage = `No subdomains found for ${params.domain.join(', ')}.`;
+            const noDataMessage = `🔍 Didn't find any subdomains for ${params.domain.join(', ')}.`;
+            clearInterval(intervalId);
+            sendMessage(noDataMessage, true);
+            controller.close(); 
             return new Response(noDataMessage, { status: 200, headers: corsHeaders });
-         }
-          
+          }
+    
           clearInterval(intervalId);
-          sendMessage('Subfinder process completed.', true);  
+          sendMessage('✅ Scan done! Now processing the results...', true);  
  
           const answerPrompt = createAnswerPromptSubfinder(params.domain.join(', '), params.includeSources, subfinderData);
           answerMessage.content = answerPrompt;
@@ -232,15 +235,14 @@ export async function handleSubfinderRequest(lastMessage: Message, corsHeaders: 
     
         } catch (error) {
           clearInterval(intervalId);
+          let errorMessage = '🚨 There was a problem during the scan. Please try again.';
           if (error instanceof Error) {
-              return new Response(error.message, { status: 200, headers: corsHeaders });
+            errorMessage = `🚨 Error: ${error.message}`;
           }
-
-          console.error('Error fetching from subfinder:', error);
-          const errorMessage = (error as Error).message;
-          sendMessage(`Error: ${errorMessage}`, true);
-          return new Response('An error occurred while processing the request.', { status: 200, headers: corsHeaders });
-      }
+          sendMessage(errorMessage, true);
+          controller.close();
+          return new Response(errorMessage, { status: 200, headers: corsHeaders });
+        }
       }
     });      
     
