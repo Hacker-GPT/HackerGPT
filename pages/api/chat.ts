@@ -93,11 +93,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
-    let startIndex = 0;
-
-    if (model === ModelType.GoogleBrowsing) {
-      startIndex = 1;
-    }
 
     const lastMessage = messages[messages.length - 1];
     const lastMessageTokens = encoding.encode(lastMessage.content);
@@ -107,20 +102,24 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(errorMessage, { headers: corsHeaders });
     }
 
-    tokenCount += lastMessageTokens.length;
-
     let messagesToSend: Message[] = [lastMessage];
 
-    for (let i = messages.length - 1 - startIndex; i >= 0; i--) {
+    for (let i = messages.length - 2; i >= 0; i--) {
       const message = messages[i];
       const tokens = encoding.encode(message.content);
 
-      if (tokenCount + tokens.length + reservedTokens <= tokenLimit) {
-        tokenCount += tokens.length;
-        messagesToSend.unshift(message);
-      } else {
-        break;
+      if (i !== messages.length - 1) {
+        if (tokenCount + tokens.length + reservedTokens <= tokenLimit) {
+          tokenCount += tokens.length;
+          messagesToSend.unshift(message);
+        } else {
+          break;
+        }
       }
+    }
+
+    if (model === ModelType.GoogleBrowsing && lastMessage.role === 'user') {
+      messagesToSend.pop();
     }
 
     const skipFirebaseStatusCheck =
