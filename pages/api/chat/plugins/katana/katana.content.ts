@@ -24,7 +24,7 @@ const displayHelpGuide = (section: string | null) => {
       '  -timeout int                 time to wait for request in seconds (default 10)\n',
     headless:
       'HEADLESS:\n' +
-      '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
+      // '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
       '  -xhr, -xhr-extraction   extract xhr request url,method in jsonl output\n',
     scope:
       'SCOPE:\n' +
@@ -182,10 +182,10 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
       case '-ignore-query-params':
         params.ignoreQueryParams = true;
         break;
-      case '-hl':
-      case '-headless':
-        params.headless = true;
-        break;
+      // case '-hl':
+      // case '-headless':
+      //   params.headless = true;
+      //   break;
       case '-xhr':
       case '-xhr-extraction':
         params.xhrExtraction = true;
