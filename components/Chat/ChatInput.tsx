@@ -275,6 +275,8 @@ export const ChatInput = ({
     };
   }, []);
 
+  const isPhone = window.innerWidth <= 640;
+
   return (
     <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 dark:border-white/20 dark:via-hgpt-medium-gray dark:to-hgpt-medium-gray md:pt-2">
       <div
@@ -328,7 +330,7 @@ export const ChatInput = ({
               style={{
                 resize: 'none',
                 bottom: `${textareaRef?.current?.scrollHeight}px`,
-                maxHeight: '400px',
+                maxHeight: isPhone ? '200px' : '400px',
                 overflow: `${
                   textareaRef.current && textareaRef.current.scrollHeight > 400
                     ? 'auto'
