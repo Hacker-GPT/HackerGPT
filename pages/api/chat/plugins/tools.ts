@@ -17,6 +17,10 @@ import {
   isKatanaCommand,
   handleKatanaRequest,
 } from '@/pages/api/chat/plugins/katana/katana.content';
+import {
+  isNaabuCommand,
+  handleNaabuRequest,
+} from '@/pages/api/chat/plugins/naabu/naabu.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
@@ -36,20 +40,26 @@ export const isToolsCommand = (message: string) => {
   return commandPattern.test(trimmedMessage);
 };
 
-export const displayToolsHelpGuide = () => {
+export const displayToolsHelpGuide = (toolUrls: {
+  [x: string]: string;
+  Katana?: any;
+}) => {
   return (
     'Tools available in HackerGPT:' +
     '\n\n' +
-    '+ [Katana](https://github.com/projectdiscovery/katana): ' +
+    `+ [Katana](${toolUrls.Katana}): ` +
     'A fast crawler for automation pipelines. Use /katana -h for more details.' +
     '\n\n' +
-    '+ [Subfinder](https://github.com/projectdiscovery/subfinder): ' +
+    `+ [Subfinder](${toolUrls.Subfinder}): ` +
     'A powerful subdomain discovery tool. Use /subfinder -h for more details.' +
     '\n\n' +
-    '+ [GAU (Get All URLs)](https://github.com/lc/gau): ' +
+    `+ [Naabu](${toolUrls.Naabu}): ` +
+    'A port scanning tool. Use /naabu -h for more details.' +
+    '\n\n' +
+    `+ [GAU (Get All URLs)](${toolUrls.Gau}): ` +
     'A tool for fetching known URLs from multiple sources. Use /gau -h for more details.' +
     '\n\n' +
-    '+ [Alterx](https://github.com/projectdiscovery/alterx): ' +
+    `+ [Alterx](${toolUrls.Alterx}): ` +
     'A fast and customizable subdomain wordlist generator. Use /alterx -h for more details.' +
     '\n\n' +
     "To use these tools, type the tool's command followed by -h to see specific instructions and options for each tool."
@@ -57,14 +67,16 @@ export const displayToolsHelpGuide = () => {
 };
 
 const commandHandlers: CommandHandler = {
+  isKatanaCommand,
+  handleKatanaRequest,
   isSubfinderCommand,
   handleSubfinderRequest,
+  isNaabuCommand,
+  handleNaabuRequest,
   isGauCommand,
   handleGauRequest,
   isAlterxCommand,
   handleAlterxRequest,
-  isKatanaCommand,
-  handleKatanaRequest,
   isToolsCommand,
   displayToolsHelpGuide,
 };
@@ -72,8 +84,9 @@ const commandHandlers: CommandHandler = {
 export const toolUrls: ToolUrls = {
   Katana: 'https://github.com/projectdiscovery/katana',
   Subfinder: 'https://github.com/projectdiscovery/subfinder',
-  Alterx: 'https://github.com/projectdiscovery/alterx',
+  Naabu: 'https://github.com/projectdiscovery/naabu',
   Gau: 'https://github.com/lc/gau',
+  Alterx: 'https://github.com/projectdiscovery/alterx',
 };
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

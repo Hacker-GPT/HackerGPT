@@ -24,7 +24,7 @@ const displayHelpGuide = (section: string | null) => {
       '  -timeout int                 time to wait for request in seconds (default 10)\n',
     headless:
       'HEADLESS:\n' +
-      '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
+      // '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
       '  -xhr, -xhr-extraction   extract xhr request url,method in jsonl output\n',
     scope:
       'SCOPE:\n' +
@@ -182,10 +182,10 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
       case '-ignore-query-params':
         params.ignoreQueryParams = true;
         break;
-      case '-hl':
-      case '-headless':
-        params.headless = true;
-        break;
+      // case '-hl':
+      // case '-headless':
+      //   params.headless = true;
+      //   break;
       case '-xhr':
       case '-xhr-extraction':
         params.xhrExtraction = true;
@@ -305,7 +305,7 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
       case '-timeout':
         if (args[i + 1] && isInteger(args[i + 1])) {
           let timeoutValue = parseInt(args[++i]);
-          if (timeoutValue > 300) {
+          if (timeoutValue > 90) {
             params.error = `🚨 Timeout value exceeds the maximum limit of 90 seconds`;
             return params;
           }
@@ -463,7 +463,8 @@ export async function handleKatanaRequest(
 
         if (
           outputString &&
-          outputString.includes('Katana process exited with code 1')
+          outputString.includes('Error executing Katana command') &&
+          outputString.includes('Error reading output file')
         ) {
           const errorMessage = `🚨 An error occurred while running your query. Please try again or check your input.`;
           clearInterval(intervalId);

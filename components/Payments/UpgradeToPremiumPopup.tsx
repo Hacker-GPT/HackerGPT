@@ -218,17 +218,6 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                         {cryptoError && (
                           <div className="mb-2 text-red-500">{cryptoError}</div>
                         )}
-                        <div className="mb-5 flex items-center">
-                          <div className="text-container text-sm">
-                            <p>
-                              <span className="font-bold">
-                                Note for crypto payment:
-                              </span>{' '}
-                              It can take several minutes for the payment to
-                              complete. Once it went through refresh the page.
-                            </p>
-                          </div>
-                        </div>
                         <div className="mb-2 flex items-center">
                           <div className="icon-container mr-2">
                             <IconCircleCheck
@@ -263,9 +252,10 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                               strokeWidth={2}
                             />
                           </div>
-                          <div className="text-container flex-1">
-                            <p className="overflow-hidden truncate whitespace-nowrap">
-                              Access to our HackerGPT API
+                          <div className="text-container">
+                            <p>
+                              Access to additional tools like Subfinder, Katana,
+                              Web Browsing and more
                             </p>
                           </div>
                         </div>
@@ -277,8 +267,10 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                               strokeWidth={2}
                             />
                           </div>
-                          <div className="text-container">
-                            <p>Access to Web Browsing plugin</p>
+                          <div className="text-container flex-1">
+                            <p className="overflow-hidden truncate whitespace-nowrap">
+                              Access to our HackerGPT API
+                            </p>
                           </div>
                         </div>
                         <div className="mb-2 flex items-center">
