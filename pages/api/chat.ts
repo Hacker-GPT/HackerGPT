@@ -175,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (userStatusOk) {
       if (lastMessage.content.startsWith('/')) {
         if (isToolsCommand(lastMessage.content)) {
-          return new Response(displayToolsHelpGuide(), {
+          return new Response(displayToolsHelpGuide(toolUrls), {
             status: 200,
             headers: corsHeaders,
           });
