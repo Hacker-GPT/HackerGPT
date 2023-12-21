@@ -1,5 +1,6 @@
 import { Message } from '@/types/chat';
 import { OpenAIModel } from '@/types/openai';
+import { ToolID } from '@/types/tool';
 
 import { replaceWordsInLastUserMessage } from '@/pages/api/hackergptstream';
 
@@ -26,7 +27,8 @@ export class OpenAIError extends Error {
 export const OpenAIStream = async (
   model: OpenAIModel['id'],
   messages: Message[],
-  answerMessage: Message
+  answerMessage: Message,
+  toolId: string | null | undefined
 ) => {
   const SYSTEM_PROMPT = process.env.SECRET_OPENAI_SYSTEM_PROMPT;
   const GOOGLE_SEARCH_SYSTEM_PROMPT =
@@ -60,7 +62,7 @@ export const OpenAIStream = async (
     stream: true,
   };
 
-  if (model === 'gpt-3.5-turbo') {
+  if (toolId === ToolID.WEBSEARCH) {
     commonBody['messages'] = [
       {
         role: 'system',

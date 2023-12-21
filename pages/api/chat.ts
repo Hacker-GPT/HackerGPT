@@ -1,6 +1,7 @@
 import { OpenAIError, OpenAIStream } from '@/pages/api/openaistream';
 import { HackerGPTStream } from '@/pages/api/hackergptstream';
 import { ChatBody, Message } from '@/types/chat';
+import { ToolID } from '@/types/tool';
 
 // @ts-expect-error
 import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
@@ -34,7 +35,6 @@ export const corsHeaders = {
 
 enum ModelType {
   GPT35TurboInstruct = 'gpt-3.5-turbo-instruct',
-  GoogleBrowsing = 'gpt-3.5-turbo',
   GPT4 = 'gpt-4',
 }
 
@@ -42,10 +42,8 @@ const getTokenLimit = (model: string) => {
   switch (model) {
     case ModelType.GPT35TurboInstruct:
       return 8000;
-    case ModelType.GoogleBrowsing:
-      return 8000;
     case ModelType.GPT4:
-      return 16000;
+      return 12000;
     default:
       return null;
   }
@@ -56,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
     const useWebBrowsingPlugin = process.env.USE_WEB_BROWSING_PLUGIN === 'TRUE';
 
     const authToken = req.headers.get('Authorization');
-    let { messages, model, max_tokens, temperature, stream } =
+    let { messages, model, max_tokens, temperature, stream, toolId } =
       (await req.json()) as ChatBody;
 
     let answerMessage: Message = { role: 'user', content: '' };
@@ -93,11 +91,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
-    let startIndex = 0;
-
-    if (model === ModelType.GoogleBrowsing) {
-      startIndex = 1;
-    }
 
     const lastMessage = messages[messages.length - 1];
     const lastMessageTokens = encoding.encode(lastMessage.content);
@@ -111,16 +104,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     let messagesToSend: Message[] = [lastMessage];
 
-    for (let i = messages.length - 1 - startIndex; i >= 0; i--) {
+    for (let i = messages.length - 2; i >= 0; i--) {
       const message = messages[i];
       const tokens = encoding.encode(message.content);
 
-      if (tokenCount + tokens.length + reservedTokens <= tokenLimit) {
-        tokenCount += tokens.length;
-        messagesToSend.unshift(message);
-      } else {
-        break;
+      if (i !== messages.length - 1) {
+        if (tokenCount + tokens.length + reservedTokens <= tokenLimit) {
+          tokenCount += tokens.length;
+          messagesToSend.unshift(message);
+        } else {
+          break;
+        }
       }
+    }
+
+    if (toolId === ToolID.WEBSEARCH && lastMessage.role === 'user') {
+      messagesToSend.pop();
     }
 
     const skipFirebaseStatusCheck =
@@ -151,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    if (userStatusOk && model === ModelType.GoogleBrowsing) {
+    if (userStatusOk && toolId === ToolID.WEBSEARCH) {
       if (!useWebBrowsingPlugin) {
         return new Response(
           'The Web Browsing Plugin is disabled. To enable it, please configure the necessary environment variables.',
@@ -212,7 +211,12 @@ const handler = async (req: Request): Promise<Response> => {
           stream
         );
       } else {
-        streamResult = await OpenAIStream(model, messagesToSend, answerMessage);
+        streamResult = await OpenAIStream(
+          model,
+          messagesToSend,
+          answerMessage,
+          toolId
+        );
       }
 
       return new Response(streamResult, {

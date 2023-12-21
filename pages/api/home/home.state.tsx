@@ -6,6 +6,7 @@ import { Prompt } from '@/types/prompt';
 
 export interface HomeInitialState {
   apiKey: string;
+  selectedToolId: string | null;
   pluginKeys: PluginKey[];
   loading: boolean;
   lightMode: 'light' | 'dark';
@@ -28,6 +29,7 @@ export interface HomeInitialState {
 
 export const initialState: HomeInitialState = {
   apiKey: '',
+  selectedToolId: null,
   loading: false,
   pluginKeys: [],
   lightMode: 'dark',
@@ -38,7 +40,7 @@ export const initialState: HomeInitialState = {
   selectedConversation: undefined,
   currentMessage: undefined,
   prompts: [],
-  temperature: 0.5,
+  temperature: 0.4,
   showPromptbar: true,
   showChatbar: true,
   messageError: false,

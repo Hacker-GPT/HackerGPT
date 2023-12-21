@@ -46,6 +46,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
 
   const {
     state: {
+      selectedToolId,
       selectedConversation,
       conversations,
       models,
@@ -142,6 +143,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
         const chatBody: ChatBody = {
           model: updatedConversation.model.id,
           messages: updatedConversation.messages,
+          toolId: selectedToolId,
         };
 
         let body;
@@ -292,6 +294,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       pluginKeys,
       selectedConversation,
       stopConversationRef,
+      selectedToolId,
     ]
   );
 

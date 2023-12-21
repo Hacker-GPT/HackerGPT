@@ -1,6 +1,6 @@
 import { Dispatch, createContext } from 'react';
 
-import { ActionType } from '@/hooks/useCreateReducer';
+import { ActionType } from '@/hooks/homeReducer';
 
 import { Conversation } from '@/types/chat';
 

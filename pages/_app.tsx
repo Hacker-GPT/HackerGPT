@@ -4,6 +4,7 @@ import { appWithTranslation } from 'next-i18next';
 import type { AppProps } from 'next/app';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
+import { HomeProvider } from '@/pages/api/home/home.context';
 
 import '@/styles/globals.css';
 import { PremiumStatusProvider } from '@/hooks/PremiumStatusContext';
@@ -17,9 +18,11 @@ function App({ Component, pageProps }: AppProps<{}>) {
     <div className={inter.className}>
       <Toaster />
       <QueryClientProvider client={queryClient}>
-        <PremiumStatusProvider>
-          <Component {...pageProps} />
-        </PremiumStatusProvider>
+        <HomeProvider>
+          <PremiumStatusProvider>
+            <Component {...pageProps} />
+          </PremiumStatusProvider>
+        </HomeProvider>
         <Analytics />
       </QueryClientProvider>
     </div>
