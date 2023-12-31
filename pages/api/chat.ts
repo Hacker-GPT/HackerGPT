@@ -204,6 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
               model,
               messagesToSend,
               answerMessage,
+              authToken,
             );
           }
         }
@@ -219,6 +220,7 @@ const handler = async (req: Request): Promise<Response> => {
           model,
           messagesToSend,
           answerMessage,
+          authToken,
           invokedByToolId,
         );
 

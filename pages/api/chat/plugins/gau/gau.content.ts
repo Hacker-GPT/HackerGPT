@@ -1,6 +1,8 @@
 import { Message } from '@/types/chat';
 import endent from 'endent';
 
+import { checkToolRateLimit } from '@/pages/api/chat/plugins/tools';
+
 export const isGauCommand = (message: string) => {
   if (!message.startsWith('/')) return false;
 
@@ -33,7 +35,7 @@ const displayHelpGuide = () => {
 };
 
 interface GauParams {
-  target: string;
+  targets: string[];
   blacklist: string[];
   fc: number[];
   fromDate: string;
@@ -52,11 +54,10 @@ interface GauParams {
 const parseGauCommandLine = (input: string): GauParams => {
   const MAX_INPUT_LENGTH = 2000;
   const MAX_PARAM_LENGTH = 100;
-  const MAX_PARAMETER_COUNT = 15;
   const MAX_ARRAY_SIZE = 50;
 
   const params: GauParams = {
-    target: '',
+    targets: [],
     blacklist: [],
     fc: [],
     fromDate: '',
@@ -79,13 +80,8 @@ const parseGauCommandLine = (input: string): GauParams => {
 
   const args = input.split(' ');
   args.shift();
-  if (args.length > MAX_PARAMETER_COUNT) {
-    params.error = `🚨 Too many parameters provided`;
-    return params;
-  }
 
   // const isInteger = (value: string) => /^[0-9]+$/.test(value);
-  const isWithinLength = (value: string) => value.length <= MAX_PARAM_LENGTH;
   const isDateFormat = (value: string) => /^\d{6}$/.test(value);
   const isValidDomainOrUrl = (url: string) =>
     /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(url);
@@ -93,20 +89,13 @@ const parseGauCommandLine = (input: string): GauParams => {
   let domainOrUrlFound = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (!isWithinLength(args[i])) {
-      params.error = `🚨 Parameter value too long: ${args[i]}`;
+    if (!args[i].startsWith('--') && isValidDomainOrUrl(args[i])) {
+      params.targets.push(args[i]);
+      domainOrUrlFound = true;
+      continue;
+    } else if (!args[i].startsWith('--') && !isValidDomainOrUrl(args[i])) {
+      params.error = `🚨 Invalid domain or URL: ${args[i]}`;
       return params;
-    }
-
-    if (!args[i].startsWith('--')) {
-      if (isValidDomainOrUrl(args[i]) && !domainOrUrlFound) {
-        params.target = args[i];
-        domainOrUrlFound = true;
-        continue;
-      } else if (!domainOrUrlFound) {
-        params.error = `🚨 Invalid domain or URL: ${args[i]}`;
-        return params;
-      }
     }
 
     try {
@@ -172,7 +161,7 @@ const parseGauCommandLine = (input: string): GauParams => {
           break;
         default:
           params.error = `🚨 Invalid or unrecognized flag: ${args[i]}`;
-          return params;
+          break;
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -181,7 +170,7 @@ const parseGauCommandLine = (input: string): GauParams => {
     }
   }
 
-  if (!params.target || params.target.length === 0) {
+  if (!params.targets || params.targets.length === 0) {
     params.error = `🚨 No target domain/URL provided`;
     return params;
   }
@@ -205,6 +194,7 @@ export async function handleGauRequest(
   messagesToSend: Message[],
   answerMessage: Message,
   invokedByToolId: boolean,
+  authToken: any,
 ) {
   if (!enableGauFeature) {
     return new Response('The GAU is disabled.', {
@@ -268,14 +258,26 @@ export async function handleGauRequest(
 
   const params = parseGauCommandLine(lastMessage.content);
 
-  if (params.error) {
+  if (params.error && invokedByToolId) {
+    return new Response(`${aiResponse}\n\n${params.error}`, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  } else if (params.error) {
     return new Response(params.error, { status: 200, headers: corsHeaders });
+  }
+
+  const rateLimitCheck = await checkToolRateLimit(authToken);
+
+  if (rateLimitCheck.isRateLimited) {
+    return rateLimitCheck.response;
   }
 
   let gauUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/gau?`;
 
-  if (params.target) {
-    gauUrl += `target=${encodeURIComponent(params.target)}`;
+  if (Array.isArray(params.targets)) {
+    const targetsString = params.targets.join(' ');
+    gauUrl += `target=${encodeURIComponent(targetsString)}`;
   }
   if (params.blacklist.length > 0) {
     gauUrl += `&blacklist=${params.blacklist.join(',')}`;
@@ -345,7 +347,7 @@ export async function handleGauRequest(
         let gauData = await gauResponse.text();
 
         if (gauData.length === 0) {
-          const noDataMessage = `🔍 Didn't find any URLs for ${params.target}.`;
+          const noDataMessage = `🔍 Didn't find any URLs for ${params.targets}.`;
           clearInterval(intervalId);
           sendMessage(noDataMessage, true);
           controller.close();
@@ -373,7 +375,7 @@ export async function handleGauRequest(
         const responseString =
           '## [Gau](https://github.com/lc/gau) Scan Results\n' +
           '**Target**: "' +
-          params.target +
+          params.targets +
           '"\n\n' +
           '**Scan Date and Time**:' +
           ` ${formattedDateTime} (${timezone}) \n\n` +
@@ -409,33 +411,32 @@ const transformUserQueryToGAUCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Based on this query, generate a command for the 'Gau' tool, designed for fetching URLs from various sources. The command should use the most relevant flags, tailored to the specifics of the target and the user's requirements. The command should follow this structured format for clarity and accuracy:
+  Based on this query, generate a command for the 'Gau' tool, designed for fetching URLs from various sources. The command should use the most relevant flags, tailored to the specifics of the target and the user's requirements. If the request involves fetching URLs for a specific target, embed the target directly in the command rather than referencing an external file. The command should follow this structured format for clarity and accuracy:
 
   ALWAYS USE THIS FORMAT:
   \`\`\`json
   { "command": "gau [target] [flags]" }
   \`\`\`
-  Replace '[target]' with the actual target and '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request.
+  Replace '[target]' with the actual target directly included in the command, and '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request.
 
   Command Construction Guidelines for Gau:
-  1. **Configuration Flags**:
+  1. **Direct Target Inclusion**: When fetching URLs for a specific target, directly embed the target in the command instead of using file references.
+  2. **Configuration Flags**:
     - --from: Fetch URLs from date (format: YYYYMM). (optional)
     - --to: Fetch URLs to date (format: YYYYMM). (optional)
     - --providers: List of providers to use (wayback, commoncrawl, otx, urlscan). (optional)
-
-  2. **Filter Flags**:
+  3. **Filter Flags**:
     - --blacklist: List of extensions to skip. (optional)
     - --fc: List of status codes to filter. (optional)
     - --ft: List of mime-types to filter. (optional)
     - --mc: List of status codes to match. (optional)
     - --mt: List of mime-types to match. (optional)
     - --fp: Remove different parameters of the same endpoint. (optional)
-
-  3. **Relevance and Efficiency**:
+  4. **Relevance and Efficiency**:
     Ensure that the selected flags are relevant and contribute to an effective and efficient URL fetching process.
 
   Example Commands:
-  For fetching URLs for a specific target with certain filters:
+  For fetching URLs for a specific target with certain filters directly:
   \`\`\`json
   { "command": "gau example.com --from 202001 --to 202012 --blacklist js,css --fc 404" }
   \`\`\`

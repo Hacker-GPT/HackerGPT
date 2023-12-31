@@ -1,6 +1,8 @@
 import { Message } from '@/types/chat';
 import endent from 'endent';
 
+import { checkToolRateLimit } from '@/pages/api/chat/plugins/tools';
+
 export const isAlterxCommand = (message: string) => {
   if (!message.startsWith('/')) return false;
 
@@ -38,8 +40,8 @@ interface AlterxParams {
 
 const parseAlterxCommandLine = (input: string): AlterxParams => {
   const MAX_INPUT_LENGTH = 2000;
-  const MAX_PARAM_LENGTH = 100;
-  const MAX_PARAMETER_COUNT = 15;
+  const MAX_PARAM_LENGTH_LIST = 1000;
+  const MAX_PARAM_LENGTH = 200;
   const MAX_ARRAY_SIZE = 50;
 
   const params: AlterxParams = {
@@ -60,23 +62,25 @@ const parseAlterxCommandLine = (input: string): AlterxParams => {
 
   const args = sanitizedInput.split(' ');
   args.shift();
-  if (args.length > MAX_PARAMETER_COUNT) {
-    params.error = `🚨 Too many parameters provided`;
-    return params;
-  }
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+
+    if (arg === '-l' || arg === '-list') {
+      if (args[i + 1] && args[i + 1].length > MAX_PARAM_LENGTH_LIST) {
+        params.error = `🚨 List parameter is too long`;
+        return params;
+      }
+    } else if (args[i + 1] && args[i + 1].length > MAX_PARAM_LENGTH) {
+      params.error = `🚨 Parameter value too long for '${arg}'`;
+      return params;
+    }
 
     switch (arg) {
       case '-l':
       case '-list':
         if (i + 1 < args.length) {
           const listInput = args[++i];
-          if (listInput.length > MAX_PARAM_LENGTH) {
-            params.error = `🚨 List parameter is too long`;
-            return params;
-          }
           params.list = listInput.split(',').slice(0, MAX_ARRAY_SIZE);
         } else {
           params.error = `🚨 List flag provided without value`;
@@ -87,10 +91,6 @@ const parseAlterxCommandLine = (input: string): AlterxParams => {
       case '-pattern':
         if (i + 1 < args.length) {
           const patternInput = args[++i];
-          if (patternInput.length > MAX_PARAM_LENGTH) {
-            params.error = `🚨 Pattern parameter is too long`;
-            return params;
-          }
           params.pattern = patternInput.split(',').slice(0, MAX_ARRAY_SIZE);
         } else {
           params.error = `🚨 Pattern flag provided without value`;
@@ -139,6 +139,7 @@ export async function handleAlterxRequest(
   messagesToSend: Message[],
   answerMessage: Message,
   invokedByToolId: boolean,
+  authToken: any,
 ) {
   if (!enableAlterxFeature) {
     return new Response('The Alterx is disabled.', {
@@ -201,8 +202,19 @@ export async function handleAlterxRequest(
   }
 
   const params = parseAlterxCommandLine(lastMessage.content);
-  if (params.error) {
+  if (params.error && invokedByToolId) {
+    return new Response(`${aiResponse}\n\n${params.error}`, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  } else if (params.error) {
     return new Response(params.error, { status: 200, headers: corsHeaders });
+  }
+
+  const rateLimitCheck = await checkToolRateLimit(authToken);
+
+  if (rateLimitCheck.isRateLimited) {
+    return rateLimitCheck.response;
   }
 
   let alterxUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/alterx?`;
@@ -302,7 +314,7 @@ const transformUserQueryToAlterxCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Based on this query, generate a command for the 'Alterx' tool, a customizable subdomain wordlist generator. The command should use the most relevant flags, with '-l' or '-list' being essential for specifying subdomains to use when creating permutations. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
+  Based on this query, generate a command for the 'Alterx' tool, a customizable subdomain wordlist generator. The command should use the most relevant flags, with '-l' or '-list' being essential for specifying subdomains to use when creating permutations. If the request involves generating a wordlist from a list of subdomains, embed the subdomains directly in the command rather than referencing an external file. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:  
   
   ALWAYS USE THIS FORMAT:
   \`\`\`json
@@ -311,21 +323,22 @@ const transformUserQueryToAlterxCommand = (lastMessage: Message) => {
   Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON.
 
   Command Construction Guidelines:
-  1. **Selective Flag Use**: Carefully choose flags that are pertinent to the task. The available flags for the 'katana' tool include:
-    - -l, -list: Specify subdomains to use when creating permutations (required).
+  1. **Direct Subdomain Inclusion**: When generating a wordlist from a list of subdomains, directly embed them in the command instead of using file references.
+    - -l, -list: Specify subdomains directly in the command to use when creating permutations (required).
+  2. **Selective Flag Use**: Carefully choose flags that are pertinent to the task. The available flags for the 'Alterx' tool include:
     - -p, -pattern: Custom permutation patterns input to generate (optional).
     - -en, -enrich: Enrich wordlist by extracting words from input (optional).
     - -limit: Limit the number of results to return, with the default being 0 (optional).
     - -help: Display help and all available flags. (optional)
     Use these flags to align with the request's specific requirements or when '-help' is requested for help.
-  2. **Relevance and Efficiency**: Ensure that the selected flags are relevant and contribute to an effective and efficient wordlist generation process.
+  3. **Relevance and Efficiency**: Ensure that the selected flags are relevant and contribute to an effective and efficient wordlist generation process.
 
   Example Commands:
-  For generating a wordlist with specific subdomains:
+  For generating a wordlist with specific subdomains directly:
   \`\`\`json
-  { "command": "alterx -l subdomain1.com,subdomain2.com -en" }
+  { "command": "alterx -l subdomain1.com,subdomain2.com,subdomain3.com" }
   \`\`\`
-  
+
   For a request for help or to see all flags:
   \`\`\`json
   { "command": "alterx -help" }

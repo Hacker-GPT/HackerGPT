@@ -58,7 +58,7 @@ export function RenderModuleBenefits(props: { moduleName: string | null }) {
   };
 
   return (
-    <div className="group/options shadow-xxs dark:shadow-xs mx-2 flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white text-left dark:border-gray-800 dark:bg-hgpt-dark-gray dark:text-gray-100 sm:mx-1">
+    <div className="group/options shadow-xxs dark:shadow-xs mx-2 flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white text-left sm:mx-1 dark:border-gray-800 dark:bg-hgpt-dark-gray dark:text-gray-100">
       <div className="flex flex-col gap-2.5 whitespace-pre-line px-5 py-4 text-sm sm:text-base">
         <span className="block text-gray-900 dark:text-white">
           {benefits.title}

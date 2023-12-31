@@ -188,7 +188,7 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                             HackerGPT Plus
                           </h3>
                           <div className="mb-2 text-lg text-[#8e8ea0]">
-                            USD $29/mo
+                            USD $20/mo
                           </div>
                         </div>
                         <div className="flex flex-col gap-0 md:flex-row md:gap-2">
