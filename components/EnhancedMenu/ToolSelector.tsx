@@ -16,12 +16,20 @@ const ToolSelector = () => {
   const { isPremium } = usePremiumStatusContext();
 
   const tools = [
-    { name: t('None'), value: 'none' },
-    { name: t('Subfinder: Locate Subdomains'), value: ToolID.SUBFINDER },
-    { name: t('Katana: Crawl Websites'), value: ToolID.KATANA },
-    { name: t('HttpX: Web Analysis'), value: ToolID.HTTPX },
-    { name: t('Naabu: Scan Ports'), value: ToolID.NAABU },
-    { name: t('GAU: Fetch URLs'), value: ToolID.GAU },
+    { name: t('None'), value: 'none', isPremium: false },
+    {
+      name: t('Subfinder: Locate Subdomains'),
+      value: ToolID.SUBFINDER,
+      isPremium: false,
+    },
+    {
+      name: t('Katana: Crawl Websites'),
+      value: ToolID.KATANA,
+      isPremium: true,
+    },
+    { name: t('HttpX: Web Analysis'), value: ToolID.HTTPX, isPremium: true },
+    { name: t('Naabu: Scan Ports'), value: ToolID.NAABU, isPremium: true },
+    { name: t('GAU: Fetch URLs'), value: ToolID.GAU, isPremium: true },
   ];
 
   useEffect(() => {
@@ -78,7 +86,8 @@ const ToolSelector = () => {
             <option
               key={key}
               value={tool.value}
-              className="font-sans dark:bg-[#343541] dark:text-white"
+              disabled={tool.isPremium && !isPremium}
+              className="flex justify-between font-sans disabled:!cursor-not-allowed disabled:text-neutral-500 dark:bg-[#343541] dark:text-white"
             >
               {tool.name}
             </option>
