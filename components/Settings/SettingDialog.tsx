@@ -367,7 +367,7 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
           {/* Modal dialog container */}
           <div
             ref={modalRef}
-            className="inline-block max-h-[500px] max-h-[80%] w-11/12 transform overflow-y-auto rounded-lg border border-gray-300 bg-white pb-4 pt-5 text-left align-bottom shadow-xl transition-all dark:border-neutral-400 dark:bg-hgpt-dark-gray sm:my-8 sm:max-h-[600px] sm:w-full sm:max-w-3xl sm:p-2 sm:align-middle"
+            className="inline-block max-h-[500px] max-h-[80%] w-11/12 transform overflow-y-auto rounded-lg border border-gray-300 bg-white pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:max-h-[600px] sm:w-full sm:max-w-3xl sm:p-2 sm:align-middle dark:border-neutral-400 dark:bg-hgpt-dark-gray"
             role="dialog"
           >
             {/* Close button */}

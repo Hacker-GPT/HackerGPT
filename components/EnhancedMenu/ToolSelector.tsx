@@ -41,16 +41,12 @@ const ToolSelector = () => {
       return;
     }
 
-    if (toolId !== ToolID.SUBFINDER && !isPremium) {
-      alert(t('This tool is available only for Plus users.'));
+    if (
+      toolId !== ToolID.SUBFINDER &&
+      selectedConversation?.model.id !== OpenAIModelID.GPT_4
+    ) {
+      alert(t('This tool is only available with the GPT-4 model.'));
       return;
-    }
-
-    if (selectedToolId === ToolID.SUBFINDER) {
-      if (selectedConversation?.model.id !== OpenAIModelID.GPT_4) {
-        alert(t('This tool is only available with the GPT-4 model.'));
-        return;
-      }
     }
 
     homeDispatch({
@@ -86,6 +82,12 @@ const ToolSelector = () => {
             {t('Katana: Crawl Websites')}
           </option>
           <option
+            value={ToolID.HTTPX}
+            className="dark:bg-[#343541] dark:text-white"
+          >
+            {t('HttpX: Web Analysis')}
+          </option>
+          <option
             value={ToolID.NAABU}
             className="dark:bg-[#343541] dark:text-white"
           >
@@ -96,12 +98,6 @@ const ToolSelector = () => {
             className="dark:bg-[#343541] dark:text-white"
           >
             {t('GAU: Fetch URLs')}
-          </option>
-          <option
-            value={ToolID.ALTERX}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('AlterX: Generate Wordlists')}
           </option>
         </select>
       </div>

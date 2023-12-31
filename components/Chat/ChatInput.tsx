@@ -3,10 +3,12 @@ import {
   IconPlayerStop,
   IconRepeat,
   IconSend,
+  IconSettings,
 } from '@tabler/icons-react';
 import {
   KeyboardEvent,
   MutableRefObject,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -68,6 +70,11 @@ export const ChatInput = ({
   const [variables, setVariables] = useState<string[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [plugin, setPlugin] = useState<Plugin | null>(null);
+  const [showEnhanceMenu, setShowEnhanceMenu] = useState(true);
+
+  const toggleEnhanceMenu = () => {
+    setShowEnhanceMenu(!showEnhanceMenu);
+  };
 
   const { isFocused, setIsFocused, menuRef } = useFocusHandler(textareaRef);
 
@@ -278,15 +285,17 @@ export const ChatInput = ({
   const isPhone = window.innerWidth <= 640;
 
   return (
-    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 dark:border-white/20 dark:via-hgpt-medium-gray dark:to-hgpt-medium-gray md:pt-2">
+    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-hgpt-medium-gray dark:to-hgpt-medium-gray">
       <div
         className={` ${
-          enhancedMenuDisplayValue === 'none' ? 'mt-[1.5rem] md:mt-[3rem]' : ``
+          enhancedMenuDisplayValue === 'none'
+            ? 'mt-[1.5rem] md:mt-[3rem]'
+            : 'mt-[1.5rem] md:mt-[3rem]'
         } stretch mx-2 mb-4 mt-4 flex flex-row gap-3 transition-all ease-in-out md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-3xl`}
       >
         {messageIsStreaming && (
           <button
-            className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white md:mb-0 md:mt-2"
+            className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 md:mb-0 md:mt-2 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white"
             onClick={handleStopConversation}
           >
             <IconPlayerStop size={16} /> {t('Stop Generating')}
@@ -297,7 +306,7 @@ export const ChatInput = ({
           selectedConversation &&
           selectedConversation.messages.length > 0 && (
             <button
-              className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 disabled:opacity-25 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white md:mb-0 md:mt-2"
+              className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 md:mb-0 md:mt-2 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white"
               onClick={onRegenerate}
             >
               <IconRepeat size={16} /> {t('Regenerate response')}
@@ -307,8 +316,8 @@ export const ChatInput = ({
         <div
           className={`relative mx-2 flex w-full flex-grow flex-col rounded-md 
             border bg-white shadow-[0_0_10px_rgba(0,0,0,0.10)] 
-            dark:bg-[#40414F] dark:text-white 
-            dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] sm:mx-4 
+            sm:mx-4 dark:bg-[#40414F] 
+            dark:text-white dark:shadow-[0_0_15px_rgba(0,0,0,0.10)] 
             ${
               selectedToolId === null
                 ? 'border-black/10 dark:border-gray-900/50'
@@ -316,17 +325,32 @@ export const ChatInput = ({
             }
           `}
         >
-          <EnhancedMenu
-            ref={menuRef}
-            isFocused={isFocused}
-            setIsFocused={setIsFocused}
-          />
+          {showEnhanceMenu && (
+            <EnhancedMenu
+              ref={menuRef}
+              isFocused={isFocused}
+              setIsFocused={setIsFocused}
+            />
+          )}
 
           <div className="flex items-start">
+            <div className="flex items-center pl-2 pt-2">
+              <button
+                onClick={toggleEnhanceMenu}
+                className={`rounded-sm p-1 ${
+                  showEnhanceMenu
+                    ? 'text-hgpt-dark-gray dark:text-hgpt-hover-white'
+                    : 'text-zinc-500 dark:text-zinc-400'
+                } cursor-default hover:text-hgpt-dark-gray hover:dark:text-hgpt-hover-white`}
+              >
+                <IconSettings size={20} />
+              </button>
+            </div>
+
             <textarea
               onFocus={() => setIsFocused(true)}
               ref={textareaRef}
-              className="m-0 w-full resize-none rounded-md bg-transparent p-0 py-3 pl-5 pr-8 text-black outline-none dark:text-white md:py-3 md:pl-5"
+              className="m-0 w-full resize-none rounded-md bg-transparent p-0 py-3 pl-3 pr-8 text-black outline-none md:py-3 md:pl-3 dark:text-white"
               style={{
                 resize: 'none',
                 bottom: `${textareaRef?.current?.scrollHeight}px`,

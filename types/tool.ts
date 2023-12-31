@@ -9,6 +9,7 @@ export interface Tool {
 export enum ToolID {
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
+  HTTPX = 'httpx',
   NAABU = 'naabu',
   GAU = 'gau',
   ALTERX = 'alterx',
@@ -18,6 +19,7 @@ export enum ToolID {
 export enum ToolName {
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
+  HTTPX = 'httpx',
   NAABU = 'naabu',
   GAU = 'gau',
   ALTERX = 'alterx',
@@ -33,6 +35,11 @@ export const Tools: Record<ToolID, Tool> = {
   [ToolID.KATANA]: {
     id: ToolID.KATANA,
     name: ToolName.KATANA,
+    requiredKeys: [],
+  },
+  [ToolID.HTTPX]: {
+    id: ToolID.HTTPX,
+    name: ToolName.HTTPX,
     requiredKeys: [],
   },
   [ToolID.NAABU]: {

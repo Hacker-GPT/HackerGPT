@@ -1,6 +1,8 @@
 import { Message } from '@/types/chat';
 import endent from 'endent';
 
+import { checkToolRateLimit } from '@/pages/api/chat/plugins/tools';
+
 export const isKatanaCommand = (message: string) => {
   if (!message.startsWith('/')) return false;
 
@@ -10,9 +12,7 @@ export const isKatanaCommand = (message: string) => {
   return commandPattern.test(trimmedMessage);
 };
 
-type SectionKey = 'input' | 'configuration' | 'headless' | 'scope' | 'filter';
-
-const displayHelpGuide = (section: string | null) => {
+const displayHelpGuide = () => {
   const helpPrefix = '```\nUsage:\n' + '   katana [flags]\n\n' + 'Flags:\n';
 
   const sections = {
@@ -21,7 +21,7 @@ const displayHelpGuide = (section: string | null) => {
       'CONFIGURATION:\n' +
       '  -jc, -js-crawl               enable endpoint parsing / crawling in javascript file\n' +
       '  -iqp, -ignore-query-params   Ignore crawling same path with different query-param values\n' +
-      '  -timeout int                 time to wait for request in seconds (default 10)\n',
+      '  -timeout int                 time to wait for request in seconds (default 15)\n',
     headless:
       'HEADLESS:\n' +
       // '  -hl, -headless          enable headless hybrid crawling (experimental)\n' +
@@ -55,12 +55,6 @@ const displayHelpGuide = (section: string | null) => {
     sections.filter +
     '\n```';
 
-  const sectionKey = section ? section.toLowerCase() : null;
-
-  if (sectionKey && sectionKey in sections) {
-    return helpPrefix + sections[sectionKey as SectionKey];
-  }
-
   return fullHelpGuide;
 };
 
@@ -86,15 +80,9 @@ interface KatanaParams {
 }
 
 const parseKatanaCommandLine = (input: string): KatanaParams => {
-  const MAX_INPUT_LENGTH = 1000;
-  const MAX_PARAM_LENGTH = 100;
-
-  if (input.length > MAX_INPUT_LENGTH) {
-    return { error: 'Input command is too long' } as KatanaParams;
-  }
-
-  const args = input.split(' ');
-  args.shift();
+  const MAX_INPUT_LENGTH = 2000;
+  const MAX_URL_PARAM_LENGTH = 1000;
+  const MAX_PARAM_LENGTH = 200;
 
   const params: KatanaParams = {
     urls: [],
@@ -112,23 +100,22 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
     extensionFilter: [],
     matchCondition: '',
     filterCondition: '',
-    timeout: 10,
+    timeout: 15,
     error: null,
     help: undefined,
   };
 
-  const helpFlagIndex = args.findIndex(
-    (arg) => arg === '-h' || arg === '-help',
-  );
-  if (helpFlagIndex !== -1) {
-    const nextArg = args[helpFlagIndex + 1];
-    const helpSection = nextArg && !nextArg.startsWith('-') ? nextArg : null;
-    params.help = displayHelpGuide(helpSection);
+  if (input.length > MAX_INPUT_LENGTH) {
+    params.error = `🚨 Input command is too long`;
     return params;
   }
 
+  const args = input.split(' ');
+  args.shift();
+
   const isInteger = (value: string) => /^[0-9]+$/.test(value);
-  const isWithinLength = (value: string) => value.length <= MAX_PARAM_LENGTH;
+  const isWithinLength = (value: string, maxLength: number) =>
+    value.length <= maxLength;
   const isValidUrl = (url: string) =>
     /^https?:\/\/[^\s]+$/.test(url) || /^[^\s]+\.[^\s]+$/.test(url);
 
@@ -142,11 +129,30 @@ const parseKatanaCommandLine = (input: string): KatanaParams => {
   };
 
   for (let i = 0; i < args.length; i++) {
-    if (!isWithinLength(args[i])) {
-      return { error: `Parameter value too long: ${args[i]}` } as KatanaParams;
+    const arg = args[i];
+    const nextArg = args[i + 1];
+
+    if (arg === '-u' || arg === '-list') {
+      if (
+        nextArg &&
+        !nextArg.startsWith('-') &&
+        !isWithinLength(nextArg, MAX_URL_PARAM_LENGTH)
+      ) {
+        return {
+          error: `URL parameter value too long: ${nextArg}`,
+        } as KatanaParams;
+      }
+    } else if (
+      nextArg &&
+      !nextArg.startsWith('-') &&
+      !isWithinLength(nextArg, MAX_PARAM_LENGTH)
+    ) {
+      return {
+        error: `Parameter value too long for '${arg}': ${nextArg}`,
+      } as KatanaParams;
     }
 
-    switch (args[i]) {
+    switch (arg) {
       case '-u':
       case '-list':
         while (args[i + 1] && !args[i + 1].startsWith('-')) {
@@ -343,6 +349,7 @@ export async function handleKatanaRequest(
   messagesToSend: Message[],
   answerMessage: Message,
   invokedByToolId: boolean,
+  authToken: any,
 ) {
   if (!enableKatanaFeature) {
     return new Response('The Katana feature is disabled.', {
@@ -396,13 +403,32 @@ export async function handleKatanaRequest(
     }
   }
 
+  const parts = lastMessage.content.split(' ');
+  if (parts.includes('-h') || parts.includes('-help')) {
+    return new Response(displayHelpGuide(), {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
+
   const params = parseKatanaCommandLine(lastMessage.content);
-  if (params.help) {
-    return new Response(params.help, { status: 200, headers: corsHeaders });
+  if (params.error && invokedByToolId) {
+    return new Response(`${aiResponse}\n\n${params.error}`, {
+      status: 200,
+      headers: corsHeaders,
+    });
+  } else if (params.error) {
+    return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
   if (params.error) {
     return new Response(params.error, { status: 200, headers: corsHeaders });
+  }
+
+  const rateLimitCheck = await checkToolRateLimit(authToken);
+
+  if (rateLimitCheck.isRateLimited) {
+    return rateLimitCheck.response;
   }
 
   let katanaUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/katana?`;
@@ -468,7 +494,7 @@ export async function handleKatanaRequest(
       params.filterCondition,
     )}`;
   }
-  if (params.timeout !== 10) {
+  if (params.timeout !== 15) {
     katanaUrl += `&timeout=${params.timeout}`;
   }
 
@@ -574,7 +600,7 @@ const transformUserQueryToKatanaCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Based on this query, generate a command for the 'katana' tool, focusing on URL crawling and filtering. The command should utilize the most relevant flags, with '-u' or '-list' being essential to specify the target URL or list. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
+  Based on this query, generate a command for the 'katana' tool, focusing on URL crawling and filtering. The command should utilize the most relevant flags, with '-u' or '-list' being essential to specify the target URL or list. If the request involves scanning a list of domains, embed the domains directly in the command rather than referencing an external file. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
 
   ALWAYS USE THIS FORMAT:
   \`\`\`json
@@ -583,11 +609,12 @@ const transformUserQueryToKatanaCommand = (lastMessage: Message) => {
   Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. 
 
   Command Construction Guidelines:
-  1. **Selective Flag Use**: Carefully choose flags that are pertinent to the task. The available flags for the 'katana' tool include:
+  1. **Direct Domain Inclusion**: When scanning a list of domains, directly embed them in the command instead of using file references.
     - -u, -list: Specify the target URL or list to crawl. (required)
+  2. **Selective Flag Use**: Carefully choose flags that are pertinent to the task. The available flags for the 'katana' tool include:
     - -js-crawl: Enable crawling of JavaScript files. (optional)
     - -ignore-query-params: Ignore different query parameters in the same path. (optional)
-    - -timeout: Set a time limit in seconds (default 10 seconds). (optional)
+    - -timeout: Set a time limit in seconds (default 15 seconds). (optional)
     - -xhr-extraction: Extract XHR request URL and method in JSONL format. (optional)
     - -crawl-scope: Define in-scope URL regex for crawling. (optional)
     - -crawl-out-scope: Define out-of-scope URL regex to exclude from crawling. (optional)
@@ -600,12 +627,12 @@ const transformUserQueryToKatanaCommand = (lastMessage: Message) => {
     - -filter-condition: Apply DSL-based conditions for filtering responses. (optional)
     - -help: Display help and all available flags. (optional)
     Use these flags to align with the request's specific requirements or when '-help' is requested for help.
-  2. **Relevance and Efficiency**: Ensure that the selected flags are relevant and contribute to an effective and efficient URL crawling and filtering process.
+  3. **Relevance and Efficiency**: Ensure that the selected flags are relevant and contribute to an effective and efficient URL crawling and filtering process.
 
   Example Commands:
-  For a basic crawl request for 'example.com':
+  For scanning a list of domains directly:
   \`\`\`json
-  { "command": "katana -u example.com" }
+  { "command": "katana -list domain1.com,domain2.com,domain3.com" }
   \`\`\`
 
   For a request for help or to see all flags:

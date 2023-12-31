@@ -106,34 +106,6 @@ const LoginSignupPopup: React.FC<Parameters> = ({ isOpen, onClose }) => {
             <h1 className="pb-4 pt-2 text-3xl font-bold text-black dark:text-white">
               {isCreatingAccount ? 'Create Your Account' : 'Welcome Back'}
             </h1>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
-              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-lg text-black hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
-            />
-            {emailError && (
-              <div className="flex items-center justify-center text-center text-xs text-red-500 ">
-                <IconAlertCircle size={18} className="mr-2" />
-                {emailError}
-              </div>
-            )}
-            {emailSent && (
-              <div className="flex items-center justify-center text-center text-xs text-green-500 ">
-                <IconMailUp size={18} className="mr-2" />
-                {'Email link sent successfully!'}
-              </div>
-            )}
-            <button
-              onClick={() => handleSendSignInLinkToEmail(email)}
-              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-lg text-black hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
-            >
-              {isCreatingAccount
-                ? 'Sign up with Email Link'
-                : 'Log in with Email Link'}
-            </button>
-            <span className="mx-4 text-black dark:text-white">OR</span>
             <button
               onClick={handleGoogleSignIn}
               className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-lg text-black hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
@@ -179,6 +151,38 @@ const LoginSignupPopup: React.FC<Parameters> = ({ isOpen, onClose }) => {
                 ? 'Sign up with Twitter / X'
                 : 'Log in with Twitter / X'}
             </button>
+            <span className="mx-4 text-black dark:text-white">OR</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-lg text-black hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
+            />
+            {emailError && (
+              <div className="flex items-center justify-center text-center text-xs text-red-500 ">
+                <IconAlertCircle size={18} className="mr-2" />
+                {emailError}
+              </div>
+            )}
+            {emailSent && (
+              <div className="flex items-center justify-center text-center text-xs text-green-500 ">
+                <IconMailUp size={18} className="mr-2" />
+                {'Email link sent successfully!'}
+              </div>
+            )}
+            <button
+              onClick={() => handleSendSignInLinkToEmail(email)}
+              className="flex w-full items-center justify-center rounded border border-gray-300 bg-white px-4 py-2 text-lg text-black hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
+            >
+              {isCreatingAccount
+                ? 'Sign up with Email Link'
+                : 'Log in with Email Link'}
+            </button>
+            <div className="mt-2 flex items-center justify-center text-center text-sm text-black dark:text-white">
+              <IconAlertCircle size={18} className="mr-2" />
+              No free messages with Email Link method.
+            </div>
           </div>
           {error && (
             <div className="flex items-center justify-center py-2 pb-2 text-center text-xs text-red-500">

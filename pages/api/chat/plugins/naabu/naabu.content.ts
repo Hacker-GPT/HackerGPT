@@ -1,6 +1,8 @@
 import { Message } from '@/types/chat';
 import endent from 'endent';
 
+import { checkToolRateLimit } from '@/pages/api/chat/plugins/tools';
+
 export const isNaabuCommand = (message: string) => {
   if (!message.startsWith('/')) return false;
 
@@ -70,9 +72,10 @@ interface NaabuParams {
 }
 
 const parseNaabuCommandLine = (input: string): NaabuParams => {
-  const MAX_INPUT_LENGTH = 500;
-  const MAX_PARAM_LENGTH = 100;
-  const MAX_ARRAY_SIZE = 100;
+  const MAX_INPUT_LENGTH = 2000;
+  const MAX_HOST_PARAM_LENGTH = 1000;
+  const MAX_PARAM_LENGTH = 200;
+  const MAX_ARRAY_SIZE = 50;
 
   const params: NaabuParams = {
     host: [],
@@ -128,13 +131,21 @@ const parseNaabuCommandLine = (input: string): NaabuParams => {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (args[i + 1] && args[i + 1].length > MAX_PARAM_LENGTH) {
+    if (
+      arg !== '-host' &&
+      args[i + 1] &&
+      args[i + 1].length > MAX_PARAM_LENGTH
+    ) {
       params.error = `🚨 Parameter value too long for '${arg}'`;
       return params;
     }
 
     switch (arg) {
       case '-host':
+        if (args[i + 1] && args[i + 1].length > MAX_HOST_PARAM_LENGTH) {
+          params.error = `🚨 Host parameter value too long`;
+          return params;
+        }
         const hosts = args[++i].split(',');
         if (
           hosts.some((host) => !isValidHostnameOrIP(host)) ||
@@ -270,6 +281,7 @@ export async function handleNaabuRequest(
   messagesToSend: Message[],
   answerMessage: Message,
   invokedByToolId: boolean,
+  authToken: any,
 ) {
   if (!enableNaabuFeature) {
     return new Response('The Naabu feature is disabled.', {
@@ -340,6 +352,12 @@ export async function handleNaabuRequest(
     });
   } else if (params.error) {
     return new Response(params.error, { status: 200, headers: corsHeaders });
+  }
+
+  const rateLimitCheck = await checkToolRateLimit(authToken);
+
+  if (rateLimitCheck.isRateLimited) {
+    return rateLimitCheck.response;
   }
 
   let naabuUrl = `${process.env.SECRET_GKE_PLUGINS_BASE_URL}/api/chat/plugins/naabu?`;
@@ -504,44 +522,46 @@ const transformUserQueryToNaabuCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Based on this query, generate a command for the 'naabu' tool, focusing on port scanning. The command should use only the most relevant flags, with '-host' being essential. The '-json' flag is optional and should be included only if specified in the user's request. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
+  Based on this query, generate a command for the 'naabu' tool, focusing on port scanning. The command should use only the most relevant flags, with '-host' being essential. If the request involves scanning a list of hosts, embed the hosts directly in the command rather than referencing an external file. The '-json' flag is optional and should be included only if specified in the user's request. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
 
   ALWAYS USE THIS FORMAT:
   \`\`\`json
   { "command": "naabu [flags]" }
   \`\`\`
-  Replace '[flags]' with the actual flags and values. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. 
+  Replace '[flags]' with the actual flags and values, directly including the hosts if necessary. Include additional flags only if they are specifically relevant to the request. Ensure the command is properly escaped to be valid JSON. 
 
   Command Construction Guidelines for Naabu:
-  1. **Selective Flag Use**: Include only the flags that are essential to the request. The available flags for Naabu are:
-  - -host string[]: Identifies the target host(s) for port scanning. (required)
-  - -port string: Specify ports to scan (e.g., 80,443, 100-200). (optional)
-  - -top-ports string: Scan top N ports (e.g., 100, 1000). (optional)
-  - -exclude-ports string: Exclude specific ports from the scan. (optional)
-  - -port-threshold int: Set a port threshold to skip port scan for the host. (optional)
-  - -exclude-cdn: Exclude full port scans for CDN/WAF. (optional)
-  - -display-cdn: Display CDN in use. (optional)
-  - -scan-all-ips: Scan all IPs associated with a DNS record. (optional)
-  - -timeout int: Set a timeout limit in seconds (default is 10). (optional)
-  - -host-discovery: Perform only host discovery. (optional)
-  - -skip-host-discovery: Skip host discovery. (optional)
-  - -probe-icmp-echo: Use ICMP echo request ping. (optional)
-  - -probe-icmp-timestamp: Use ICMP timestamp request ping. (optional)
-  - -probe-icmp-address-mask: Use ICMP address mask request ping. (optional)
-  - -arp-ping: Use ARP ping. (optional)
-  - -nd-ping: Use IPv6 Neighbor Discovery ping. (optional)
-  - -rev-ptr: Perform a reverse PTR lookup. (optional)
-  - -json: Output results in JSON format. (optional)
-  - -help: Display help and all available flags. (optional)
-  Use these flags to align with the request's specific requirements or when '-help' is requested for help.
-  2. **Relevance and Efficiency**: Ensure that the flags chosen for the command are relevant and contribute to an effective and efficient port discovery process.
+  1. **Direct Host Inclusion**: When scanning a list of hosts, directly embed them in the command instead of using file references.
+    - -host string[]: Identifies the target host(s) for port scanning directly in the command. (required)
+  2. **Selective Flag Use**: Include only the flags that are essential to the request. The available flags for Naabu are:
+    - -port string: Specify ports to scan (e.g., 80,443, 100-200). (optional)
+    - -top-ports string: Scan top N ports (e.g., 100, 1000). (optional)
+    - -exclude-ports string: Exclude specific ports from the scan. (optional)
+    - -port-threshold int: Set a port threshold to skip port scan for the host. (optional)
+    - -exclude-cdn: Exclude full port scans for CDN/WAF. (optional)
+    - -display-cdn: Display CDN in use. (optional)
+    - -scan-all-ips: Scan all IPs associated with a DNS record. (optional)
+    - -timeout int: Set a timeout limit in seconds (default is 10). (optional)
+    - -host-discovery: Perform only host discovery. (optional)
+    - -skip-host-discovery: Skip host discovery. (optional)
+    - -probe-icmp-echo: Use ICMP echo request ping. (optional)
+    - -probe-icmp-timestamp: Use ICMP timestamp request ping. (optional)
+    - -probe-icmp-address-mask: Use ICMP address mask request ping. (optional)
+    - -arp-ping: Use ARP ping. (optional)
+    - -nd-ping: Use IPv6 Neighbor Discovery ping. (optional)
+    - -rev-ptr: Perform a reverse PTR lookup. (optional)
+    - -json: Output results in JSON format. (optional)
+    - -help: Display help and all available flags. (optional)
+    Use these flags to align with the request's specific requirements or when '-help' is requested for help.
+  3. **Relevance and Efficiency**: Ensure that the flags chosen for the command are relevant and contribute to an effective and efficient port discovery process.
 
-  For example, for a request to scan ports for 'example.com', the command could be:
+  Example Commands:
+  For scanning a list of hosts directly:
   \`\`\`json
-  { "command": "naabu -host example.com -top-ports 100" }
+  { "command": "naabu -host host1.com,host2.com,host3.com -top-ports 100" }
   \`\`\`
 
-  For a request for help or all flags, the command could be:
+  For a request for help or all flags:
   \`\`\`json
   { "command": "naabu -help" }
   \`\`\`
