@@ -422,21 +422,35 @@ export const SettingDialog: FC<Props> = ({ open, onClose }) => {
                     <div className="mb-2 text-sm font-bold text-black dark:text-neutral-200">
                       {t('Theme')}
                     </div>
-
-                    <select
-                      className="w-full cursor-pointer bg-transparent p-2 text-neutral-700 dark:text-neutral-200"
-                      value={state.theme}
-                      onChange={(event) =>
-                        dispatch({ field: 'theme', value: event.target.value })
-                      }
-                    >
-                      <option value="dark">{t('Dark mode')}</option>
-                      <option value="light">{t('Light mode')}</option>
-                    </select>
+                    <div className="w-full rounded-lg border border-neutral-200 bg-transparent pr-1 text-neutral-900 focus:outline-none dark:border-neutral-500 dark:text-white">
+                      <select
+                        className="w-full cursor-pointer bg-transparent p-2 text-neutral-700 focus:outline-none dark:text-neutral-200"
+                        value={state.theme}
+                        onChange={(event) =>
+                          dispatch({
+                            field: 'theme',
+                            value: event.target.value,
+                          })
+                        }
+                      >
+                        <option
+                          className="font-sans dark:bg-[#343541] dark:text-white"
+                          value="dark"
+                        >
+                          {t('Dark mode')}
+                        </option>
+                        <option
+                          className="font-sans dark:bg-[#343541] dark:text-white"
+                          value="light"
+                        >
+                          {t('Light mode')}
+                        </option>
+                      </select>
+                    </div>
                     {isPremium && isUserLoggedIn && (
                       <button
                         type="button"
-                        className="mt-6 w-full rounded-lg border border border-gray-300 bg-white px-4 py-2 text-black shadow hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
+                        className="mt-6 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-black shadow hover:bg-hgpt-hover-white dark:bg-hgpt-dark-gray dark:text-white dark:hover:bg-hgpt-medium-gray"
                         onClick={manageSubscription}
                       >
                         <span>Manage Subscription</span>
