@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 
 import { ToolID } from '@/types/tool';
 import { OpenAIModelID } from '@/types/openai';
-
 import { usePremiumStatusContext } from '@/hooks/PremiumStatusContext';
 
 import HomeContext from '@/pages/api/home/home.context';
@@ -15,6 +14,15 @@ const ToolSelector = () => {
     dispatch: homeDispatch,
   } = useContext(HomeContext);
   const { isPremium } = usePremiumStatusContext();
+
+  const tools = [
+    { name: t('None'), value: 'none' },
+    { name: t('Subfinder: Locate Subdomains'), value: ToolID.SUBFINDER },
+    { name: t('Katana: Crawl Websites'), value: ToolID.KATANA },
+    { name: t('HttpX: Web Analysis'), value: ToolID.HTTPX },
+    { name: t('Naabu: Scan Ports'), value: ToolID.NAABU },
+    { name: t('GAU: Fetch URLs'), value: ToolID.GAU },
+  ];
 
   useEffect(() => {
     if (selectedConversation?.model.id) {
@@ -60,45 +68,21 @@ const ToolSelector = () => {
       <label className="mr-2 text-left text-sm text-neutral-700 dark:text-neutral-300">
         {t('Tool')}
       </label>
-      <div className="w-fit rounded-lg border border-neutral-200 bg-transparent pr-1 text-neutral-900 focus:outline-none dark:border-neutral-600 dark:text-white">
+      <div className="w-fit rounded-lg border border-neutral-200 bg-transparent pr-1 text-neutral-900 focus:outline-none dark:border-neutral-500 dark:text-white">
         <select
-          className="w-max-20 bg-transparent p-2 focus:outline-none"
+          className="w-max-20 cursor-pointer bg-transparent p-2 focus:outline-none"
           value={selectedToolId || 'none'}
           onChange={(e) => toolOnChange(e.target.value)}
         >
-          <option value={'none'} className="dark:bg-[#343541] dark:text-white">
-            {t('None')}
-          </option>
-          <option
-            value={ToolID.SUBFINDER}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('Subfinder: Locate Subdomains')}
-          </option>
-          <option
-            value={ToolID.KATANA}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('Katana: Crawl Websites')}
-          </option>
-          <option
-            value={ToolID.HTTPX}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('HttpX: Web Analysis')}
-          </option>
-          <option
-            value={ToolID.NAABU}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('Naabu: Scan Ports')}
-          </option>
-          <option
-            value={ToolID.GAU}
-            className="dark:bg-[#343541] dark:text-white"
-          >
-            {t('GAU: Fetch URLs')}
-          </option>
+          {tools.map((tool, key) => (
+            <option
+              key={key}
+              value={tool.value}
+              className="font-sans dark:bg-[#343541] dark:text-white"
+            >
+              {tool.name}
+            </option>
+          ))}
         </select>
       </div>
     </div>
