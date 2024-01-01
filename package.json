@@ -15,7 +15,7 @@
     "@tabler/icons-react": "^2.44.0",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/analytics": "^1.1.1",
-    "@vercel/kv": "^0.2.4",
+    "@vercel/kv": "^1.0.1",
     "cheerio": "^1.0.0-rc.12",
     "eventsource-parser": "^1.1.1",
     "firebase": "^10.7.1",
