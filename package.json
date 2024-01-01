@@ -50,7 +50,7 @@
     "autoprefixer": "^10.4.16",
     "endent": "^2.1.0",
     "eslint": "8.56.0",
-    "eslint-config-next": "13.2.4",
+    "eslint-config-next": "14.0.4",
     "gpt-3-encoder": "^1.1.4",
     "jsdom": "^21.1.2",
     "postcss": "^8.4.32",
