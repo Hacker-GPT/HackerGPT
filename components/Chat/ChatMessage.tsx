@@ -19,7 +19,7 @@ import HomeContext from '@/pages/api/home/home.context';
 import { CodeBlock } from '../Markdown/CodeBlock';
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown';
 
-import rehypeMathjax from 'rehype-mathjax';
+import rehypeMathjax from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
