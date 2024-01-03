@@ -7,6 +7,7 @@ export interface Tool {
 }
 
 export enum ToolID {
+  NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
   HTTPX = 'httpx',
@@ -17,6 +18,7 @@ export enum ToolID {
 }
 
 export enum ToolName {
+  NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
   HTTPX = 'httpx',
@@ -27,6 +29,11 @@ export enum ToolName {
 }
 
 export const Tools: Record<ToolID, Tool> = {
+  [ToolID.NUCLEI]: {
+    id: ToolID.NUCLEI,
+    name: ToolName.NUCLEI,
+    requiredKeys: [],
+  },
   [ToolID.SUBFINDER]: {
     id: ToolID.SUBFINDER,
     name: ToolName.SUBFINDER,

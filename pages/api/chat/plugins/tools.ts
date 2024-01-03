@@ -25,6 +25,10 @@ import {
   isHttpxCommand,
   handleHttpxRequest,
 } from '@/pages/api/chat/plugins/httpx/httpx.content';
+import {
+  isNucleiCommand,
+  handleNucleiRequest,
+} from '@/pages/api/chat/plugins/nuclei/nuclei.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
@@ -51,14 +55,17 @@ export const displayToolsHelpGuide = (toolUrls: {
   return (
     'Tools available in HackerGPT:' +
     '\n\n' +
+    `+ [Nuclei](${toolUrls.Nuclei}): ` +
+    'Fast and customisable vulnerability scanner. Use /nuclei -h for more details.' +
+    '\n\n' +
     `+ [Katana](${toolUrls.Katana}): ` +
-    'A fast crawler for automation pipelines. Use /katana -h for more details.' +
+    'A web crawling framework designed to navigate and parse for hidden details. Use /katana -h for more details.' +
     '\n\n' +
     `+ [Subfinder](${toolUrls.Subfinder}): ` +
-    'A powerful subdomain discovery tool. Use /subfinder -h for more details.' +
+    'A robust discovery tool for passive enumeration on valid subdomains. Use /subfinder -h for more details.' +
     '\n\n' +
-    `+ [httpx](${toolUrls.Httpx}): ` +
-    'A versatile HTTP toolkit for web analysis. Use /httpx -h for more details.' +
+    `+ [HttpX](${toolUrls.HttpX}): ` +
+    'An HTTP toolkit that probes services, web servers, and other valuable metadata. Use /httpx -h for more details.' +
     '\n\n' +
     `+ [Naabu](${toolUrls.Naabu}): ` +
     'A port scanning tool. Use /naabu -h for more details.' +
@@ -74,10 +81,12 @@ export const displayToolsHelpGuide = (toolUrls: {
 };
 
 const commandHandlers: CommandHandler = {
-  isKatanaCommand,
-  handleKatanaRequest,
+  isNucleiCommand,
+  handleNucleiRequest,
   isSubfinderCommand,
   handleSubfinderRequest,
+  isKatanaCommand,
+  handleKatanaRequest,
   isHttpxCommand,
   handleHttpxRequest,
   isNaabuCommand,
@@ -91,9 +100,10 @@ const commandHandlers: CommandHandler = {
 };
 
 export const toolUrls: ToolUrls = {
-  Katana: 'https://github.com/projectdiscovery/katana',
+  Nuclei: 'https://github.com/projectdiscovery/nuclei',
   Subfinder: 'https://github.com/projectdiscovery/subfinder',
-  httpx: 'https://github.com/projectdiscovery/httpx',
+  Katana: 'https://github.com/projectdiscovery/katana',
+  HttpX: 'https://github.com/projectdiscovery/httpx',
   Naabu: 'https://github.com/projectdiscovery/naabu',
   Gau: 'https://github.com/lc/gau',
   Alterx: 'https://github.com/projectdiscovery/alterx',
@@ -116,6 +126,7 @@ type ToolIdToHandlerMapping = {
 };
 
 export const toolIdToHandlerMapping: ToolIdToHandlerMapping = {
+  nuclei: handleNucleiRequest,
   subfinder: handleSubfinderRequest,
   katana: handleKatanaRequest,
   httpx: handleHttpxRequest,
@@ -185,3 +196,5 @@ export async function checkToolRateLimit(authToken: any) {
     };
   }
 }
+
+export const isInteger = (value: string) => /^[0-9]+$/.test(value);

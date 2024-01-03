@@ -23,13 +23,17 @@ const ToolSelector = () => {
       isPremium: false,
     },
     {
+      name: t('Nuclei: Discover Vulnerabilities'),
+      value: ToolID.NUCLEI,
+      isPremium: true,
+    },
+    {
       name: t('Katana: Crawl Websites'),
       value: ToolID.KATANA,
       isPremium: true,
     },
     { name: t('HttpX: Web Analysis'), value: ToolID.HTTPX, isPremium: true },
     { name: t('Naabu: Scan Ports'), value: ToolID.NAABU, isPremium: true },
-    { name: t('GAU: Fetch URLs'), value: ToolID.GAU, isPremium: true },
   ];
 
   useEffect(() => {
