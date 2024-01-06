@@ -231,6 +231,7 @@ const PluginSelector = () => {
               key={key}
               value={tool.value}
               disabled={tool.isPremium && !isPremium}
+              className="flex font-sans disabled:text-neutral-500 dark:bg-[#343541] dark:text-white"
             >
               {tool.selectorName}
             </option>
