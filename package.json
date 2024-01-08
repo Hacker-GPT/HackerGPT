@@ -14,7 +14,7 @@
     "@dqbd/tiktoken": "^1.0.7",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^1.0.6",
-    "@tabler/icons-react": "^2.44.0",
+    "@tabler/icons-react": "^2.45.0",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/analytics": "^1.1.1",
     "@vercel/kv": "^0.2.4",
