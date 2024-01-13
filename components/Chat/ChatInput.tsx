@@ -285,23 +285,14 @@ export const ChatInput = ({
   const isPhone = window.innerWidth <= 640;
 
   return (
-    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-hgpt-medium-gray dark:to-hgpt-medium-gray">
+    <div className="absolute bottom-0 left-0 w-full border-transparent bg-gradient-to-b from-transparent via-white to-white pt-6 md:pt-2 dark:border-white/20 dark:via-[#343541] dark:to-[#343541]">
       <div
         className={` ${
           enhancedMenuDisplayValue === 'none'
             ? 'mt-[1.5rem] md:mt-[3rem]'
-            : 'mt-[1.5rem] md:mt-[3rem]'
+            : `${'mt-[8rem] md:mt-[9.5rem]'}`
         } stretch mx-2 mb-4 mt-4 flex flex-row gap-3 transition-all ease-in-out md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-3xl`}
       >
-        {messageIsStreaming && (
-          <button
-            className="absolute left-0 right-0 top-0 mx-auto mb-3 flex w-fit items-center gap-3 rounded border border-neutral-200 bg-white px-4 py-2 text-black hover:opacity-50 md:mb-0 md:mt-2 dark:border-neutral-600 dark:bg-hgpt-medium-gray dark:text-white"
-            onClick={handleStopConversation}
-          >
-            <IconPlayerStop size={16} /> {t('Stop Generating')}
-          </button>
-        )}
-
         {!messageIsStreaming &&
           selectedConversation &&
           selectedConversation.messages.length > 0 && (
@@ -371,11 +362,15 @@ export const ChatInput = ({
           </div>
 
           <button
-            className="absolute right-2 top-2 rounded-sm p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
-            onClick={handleSend}
+            className={`absolute right-2 top-2 rounded-sm p-1 ${
+              messageIsStreaming
+                ? 'text-hgpt-dark-gray dark:text-hgpt-hover-white'
+                : 'text-zinc-500 dark:text-zinc-400'
+            } hover:text-hgpt-dark-gray hover:dark:text-hgpt-hover-white`}
+            onClick={messageIsStreaming ? handleStopConversation : handleSend}
           >
             {messageIsStreaming ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-t-2 text-zinc-500 dark:text-zinc-400"></div>
+              <IconPlayerStop size={18} />
             ) : (
               <IconSend size={18} />
             )}

@@ -63,6 +63,7 @@ export const Chatbar = () => {
     );
 
     homeDispatch({ field: 'conversations', value: updatedConversations });
+    chatDispatch({ field: 'searchTerm', value: '' });
     saveConversations(updatedConversations);
 
     if (updatedConversations.length > 0) {
@@ -139,6 +140,10 @@ export const Chatbar = () => {
         toggleOpen={handleToggleChatbar}
         handleCreateItem={handleNewConversation}
         handleDrop={handleDrop}
+        searchTerm={searchTerm}
+        handleSearchTerm={(searchTerm: string) =>
+          chatDispatch({ field: 'searchTerm', value: searchTerm })
+        }
         footerComponent={<ChatbarSettings />}
         folderComponent={undefined}
       />

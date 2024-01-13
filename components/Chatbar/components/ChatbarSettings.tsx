@@ -5,6 +5,7 @@ import {
   IconDots,
   IconLockOpen,
   IconInfoCircle,
+  IconBrandGithub,
 } from '@tabler/icons-react';
 
 import { useState, useContext } from 'react';
@@ -109,6 +110,13 @@ export const ChatbarSettings = () => {
             icon={<IconInfoCircle size={18} />}
             onClick={() => {
               window.open('/about-us', '_blank');
+            }}
+          />
+          <SidebarButton
+            className="w-min"
+            icon={<IconBrandGithub size={18} />}
+            onClick={() => {
+              window.open('https://github.com/Hacker-GPT/HackerGPT', '_blank');
             }}
           />
           <SidebarButton

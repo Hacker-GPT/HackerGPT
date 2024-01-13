@@ -7,6 +7,8 @@ import {
   OpenSidebarButton,
 } from './components/OpenCloseButton';
 
+import Search from '../Search';
+
 interface Props<T> {
   isOpen: boolean;
   addItemButtonTitle: string;
@@ -15,6 +17,8 @@ interface Props<T> {
   itemComponent: ReactNode;
   folderComponent: ReactNode;
   footerComponent?: ReactNode;
+  searchTerm: string;
+  handleSearchTerm: (searchTerm: string) => void;
   toggleOpen: () => void;
   handleCreateItem: () => void;
   handleDrop: (e: any) => void;
@@ -28,6 +32,8 @@ const Sidebar = <T,>({
   itemComponent,
   folderComponent,
   footerComponent,
+  searchTerm,
+  handleSearchTerm,
   toggleOpen,
   handleCreateItem,
   handleDrop,
@@ -53,15 +59,22 @@ const Sidebar = <T,>({
       >
         <div className="flex items-center">
           <button
-            className="text-sidebar flex w-[240px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
+            className="text-sidebar flex w-[245px] flex-shrink-0 cursor-pointer select-none items-center gap-3 rounded-md border border-white/20 p-3 text-white transition-colors duration-200 hover:bg-gray-500/10"
             onClick={() => {
               handleCreateItem();
+              handleSearchTerm('');
             }}
           >
             <IconPlus size={16} />
             {addItemButtonTitle}
           </button>
         </div>
+
+        <Search
+          placeholder={t('Search prompts...') || ''}
+          searchTerm={searchTerm}
+          onSearch={handleSearchTerm}
+        />
 
         <div className="flex-grow overflow-auto">
           {items?.length > 0 && (
