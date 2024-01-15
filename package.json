@@ -12,7 +12,7 @@
   "dependencies": {
     "@babel/traverse": "^7.23.6",
     "@dqbd/tiktoken": "^1.0.7",
-    "@headlessui/react": "^1.7.17",
+    "@headlessui/react": "^1.7.18",
     "@heroicons/react": "^1.0.6",
     "@tabler/icons-react": "^2.45.0",
     "@upstash/ratelimit": "^1.0.0",
