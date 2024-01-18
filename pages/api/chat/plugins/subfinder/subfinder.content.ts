@@ -167,7 +167,7 @@ const parseCommandLine = (input: string) => {
           return params;
         }
         break;
-      case '-nW':
+      case '-nw':
       case '-active':
         params.onlyActive = true;
         break;
@@ -179,11 +179,11 @@ const parseCommandLine = (input: string) => {
       case '-collect-sources':
         params.includeSources = true;
         break;
-      case '-oJ':
+      case '-oj':
       case '-json':
         params.outputJson = true;
         break;
-      case '-oI':
+      case '-oi':
       case '-ip':
         params.ip = true;
         break;
