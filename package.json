@@ -13,7 +13,7 @@
     "@babel/traverse": "^7.23.9",
     "@dqbd/tiktoken": "^1.0.7",
     "@headlessui/react": "^1.7.18",
-    "@heroicons/react": "^1.0.6",
+    "@heroicons/react": "^2.1.1",
     "@tabler/icons-react": "^2.46.0",
     "@upstash/ratelimit": "^1.0.0",
     "@vercel/analytics": "^1.1.2",
