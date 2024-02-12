@@ -14,7 +14,7 @@
     "@dqbd/tiktoken": "^1.0.7",
     "@headlessui/react": "^1.7.18",
     "@tabler/icons-react": "^2.47.0",
-    "@upstash/ratelimit": "^1.0.0",
+    "@upstash/ratelimit": "^1.0.1",
     "@vercel/analytics": "^1.1.2",
     "@vercel/kv": "^0.2.4",
     "cheerio": "^1.0.0-rc.12",
