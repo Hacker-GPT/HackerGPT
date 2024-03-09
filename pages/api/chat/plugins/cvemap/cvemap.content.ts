@@ -61,64 +61,41 @@ const displayHelpGuide = () => {
 };
 
 interface CvemapParams {
-  ids: string[];
-  cwes: string[];
-  vendors: string[];
-  products: string[];
-  excludeProducts: string[];
-  severityLevels: string[];
-  cvssScores: string[];
-  cpeUri: string;
-  epssScores: string;
-  epssPercentiles: string[];
-  age: string;
-  assignees: string[];
-  vulnerabilityStatus: string;
-  searchTerms: string[];
-  kev: boolean;
-  template: boolean;
-  poc: boolean;
-  hackerone: boolean;
-  remote: boolean;
-  fieldsToDisplay: string[];
-  excludeFields: string[];
-  listIdsOnly: boolean;
-  limit: number;
-  offset: number;
-  json: boolean;
-  error: string | null;
+  ids?: string[];
+  cwes?: string[];
+  vendors?: string[];
+  products?: string[];
+  excludeProducts?: string[];
+  severity?: string[];
+  cvssScores?: string[];
+  cpe?: string;
+  epssScores?: string;
+  epssPercentiles?: string[];
+  age?: string;
+  assignees?: string[];
+  vulnerabilityStatus?: string;
+  searchTerms?: string[];
+  kev?: boolean;
+  template?: boolean;
+  poc?: boolean;
+  hackerone?: boolean;
+  remote?: boolean;
+  fieldsToDisplay?: string[];
+  excludeFields?: string[];
+  listIdsOnly?: boolean;
+  limit?: number;
+  offset?: number;
+  json?: boolean;
+  error?: string | null;
 }
 
 const parseCommandLine = (input: string): CvemapParams => {
   const MAX_INPUT_LENGTH = 500;
 
   const params: CvemapParams = {
-    ids: [],
-    cwes: [],
-    vendors: [],
-    products: [],
-    excludeProducts: [],
-    severityLevels: [],
-    cvssScores: [],
-    cpeUri: '',
-    epssScores: '',
-    epssPercentiles: [],
-    age: '',
-    assignees: [],
-    vulnerabilityStatus: '',
-    searchTerms: [],
-    kev: false,
-    template: false,
-    poc: false,
-    hackerone: false,
-    remote: false,
-    fieldsToDisplay: [],
-    excludeFields: [],
-    listIdsOnly: false,
-    limit: 50, // Default value
-    offset: 0, // Default assumes starting from the beginning
+    limit: 50,
+    offset: 0,
     json: false,
-    error: null,
   };
 
   if (input.length > MAX_INPUT_LENGTH) {
@@ -157,28 +134,72 @@ const parseCommandLine = (input: string): CvemapParams => {
         break;
       case '-s':
       case '-severity':
-        params.severityLevels = args[++i].split(',');
+        params.severity = args[++i].split(',');
         break;
       case '-cs':
       case '-cvss-score':
         params.cvssScores = args[++i].split(',');
         break;
-      // Skipping other case matches for brevity. Add similar cases for all parameters.
-      case '-l':
-      case '-limit':
-        const limit = parseInt(args[++i]);
-        if (!isNaN(limit)) params.limit = limit;
+      case '-cpe':
+        params.cpe = args[++i];
+        break;
+      case '-epss-score':
+        params.epssScores = args[++i];
+        break;
+      case '-epss-percentile':
+        params.epssPercentiles = args[++i].split(',');
         break;
       case '-age':
         params.age = args[++i];
+        break;
+      case '-assignee':
+        params.assignees = args[++i].split(',');
+        break;
+      case '-vstatus':
+        params.vulnerabilityStatus = args[++i];
+        break;
+      case '-search':
+        params.searchTerms = args[++i].split(',');
+        break;
+      case '-kev':
+        params.kev = true;
+        break;
+      case '-template':
+        params.template = true;
+        break;
+      case '-poc':
+        params.poc = true;
+        break;
+      case '-hackerone':
+        params.hackerone = true;
+        break;
+      case '-remote':
+        params.remote = true;
+        break;
+      case '-fields':
+        params.fieldsToDisplay = args[++i].split(',');
+        break;
+      case '-exclude-fields':
+        params.excludeFields = args[++i].split(',');
+        break;
+      case '-list-id':
+        params.listIdsOnly = true;
+        break;
+      case '-l':
+      case '-limit':
+        const limit = parseInt(args[++i], 10);
+        if (!isNaN(limit)) params.limit = limit;
+        break;
+      case '-offset':
+        const offset = parseInt(args[++i], 10);
+        if (!isNaN(offset)) params.offset = offset;
         break;
       case '-j':
       case '-json':
         params.json = true;
         break;
       default:
-        params.error = `🚨 Invalid or unrecognized flag: ${args[i]}`;
-        return params;
+        break;
     }
   }
 
@@ -386,7 +407,7 @@ export async function handleCvemapRequest(
         sendMessage(aiResponse, true);
       }
 
-      sendMessage('🚀 Starting the scan. It might take a minute.', true);
+      // sendMessage('🚀 Starting the scan. It might take a minute.', true);
 
       const intervalId = setInterval(() => {
         sendMessage(
@@ -424,7 +445,7 @@ export async function handleCvemapRequest(
         }
 
         clearInterval(intervalId);
-        sendMessage('✅ CVE scan completed! Processing the results...', true);
+        // sendMessage('✅ CVE scan completed! Processing the results...', true);
 
         if (params.json) {
           const responseString = createResponseString(cvemapData);
@@ -549,69 +570,72 @@ const extractHostsFromCvemapData = (data: string) => {
 const createResponseString = (cvemapData: string) => {
   const outerData = JSON.parse(cvemapData);
   const data = JSON.parse(outerData.output);
-  
   let markdownOutput = `## CVE Details Report\n\n`;
 
-  data.forEach((cve: any) => {
-    const { cve_id, cve_description, severity, cvss_score, weaknesses, cpe, reference, poc, age_in_days, vuln_status, is_poc, is_remote, is_oss, vulnerable_cpe, vendor_advisory, patch_url, kev, is_template, is_exploited, hackerone, shodan } = cve;
+  data.forEach((cve: { cve_id: any; cve_description: any; severity: any; cvss_score: any; cvss_metrics: any; weaknesses: any; cpe: any; reference: any; poc: any; age_in_days: any; vuln_status: any; is_poc: any; is_remote: any; is_oss: any; vulnerable_cpe: any; vendor_advisory: any; patch_url: any; is_template: any; is_exploited: any; hackerone: any; shodan: any; oss: any; }) => {
+    const { cve_id, cve_description, severity, cvss_score, cvss_metrics, weaknesses, cpe, reference, poc, age_in_days, vuln_status, is_poc, is_remote, is_oss, vulnerable_cpe, vendor_advisory, patch_url, is_template, is_exploited, hackerone, shodan, oss } = cve;
 
     markdownOutput += `### ${cve_id}\n`;
     markdownOutput += `- **Description**: ${cve_description}\n`;
-    markdownOutput += `- **Severity**: ${severity}, **CVSS Score**: ${cvss_score}\n`;
+    markdownOutput += `- **Severity**: ${severity}, **CVSS Score**: ${cvss_score} (${cvss_metrics?.cvss31?.vector})\n`;
 
     if (weaknesses?.length) {
-      const weaknessList = weaknesses.map((w: { cwe_name: any; cwe_id: any; }) => `  - ${w.cwe_name || w.cwe_id}`).join('\n');
-      markdownOutput += `- **Weaknesses**:\n${weaknessList}\n`;
+      markdownOutput += `- **Weaknesses**:\n`;
+      weaknesses.forEach((w: { cwe_name: any; cwe_id: any; }) => markdownOutput += `  - ${w.cwe_name || w.cwe_id}\n`);
     }
 
-    ['vendor', 'product'].forEach(prop => {
-      if (cpe?.[prop]) markdownOutput += `- **${prop[0].toUpperCase() + prop.slice(1)}**: ${cpe[prop]}\n`;
-    });
+    if (cpe?.vendor || cpe?.product) {
+      markdownOutput += `- **CPE**: ${cpe.vendor || 'Unknown vendor'}:${cpe.product || 'Unknown product'}\n`;
+    }
 
     if (reference?.length) {
-      const referenceList = reference.map((ref: any) => `  - [${ref}](${ref})`).join('\n');
-      markdownOutput += `- **References**:\n${referenceList}\n`;
+      markdownOutput += `- **References**:\n`;
+      reference.forEach((ref: any) => markdownOutput += `  - [${ref}](${ref})\n`);
     }
 
     if (poc?.length) {
-      const pocList = poc.map((p: { url: any; source: any; added_at: string; }) => `  - [${p.url}](${p.url}) by ${p.source} on ${p.added_at.substring(0, 10)}`).join('\n');
-      markdownOutput += `- **Proof of Concept**:\n${pocList}\n`;
+      markdownOutput += `- **Proof of Concept**:\n\n`;
+      markdownOutput += `| URL | Source | Added At |\n`;
+      markdownOutput += `| --- | ------ | -------- |\n`;
+      poc.forEach((p: { added_at: string | number | Date; url: any; source: any; }) => {
+        const addedAtFormatted = new Date(p.added_at).toISOString().split('T')[0]; // ISO date without time
+        markdownOutput += `| [${p.url}](${p.url}) | ${p.source} | ${addedAtFormatted} |\n`;
+      });
     }
 
-    const optionalFields = [
-      { label: "Age in Days", value: age_in_days },
-      { label: "Vulnerability Status", value: vuln_status },
-      { label: "Proof of Concept Available", value: is_poc, format: (v: any) => v ? 'Yes' : 'No' },
-      { label: "Remotely Exploitable", value: is_remote, format: (v: any) => v ? 'Yes' : 'No' },
-      { label: "Open Source Software", value: is_oss, format: (v: any) => v ? 'Yes' : 'No' },
-      { label: "Vendor Advisory", value: vendor_advisory, isUrl: true },
-      { label: "Template Available", value: is_template, format: (v: any) => v ? 'Yes' : 'No' },
-      { label: "Exploited in the Wild", value: is_exploited, format: (v: any) => v ? 'Yes' : 'No' },
-      { label: "HackerOne Rank", value: hackerone?.rank },
-      { label: "HackerOne Report Count", value: hackerone?.count },
-      { label: "Shodan Count", value: shodan?.count },
-      { label: "KEV Due Date", value: kev?.due_date },
-    ];
+    // Optional fields handled gracefully
+    const addOptionalField = (label: string, value: string) => {
+      if (value) markdownOutput += `- **${label}**: ${value}\n`;
+    };
 
-    optionalFields.forEach(({ label, value, format, isUrl }) => {
-      if (value !== undefined) {
-        markdownOutput += `- **${label}**: ${isUrl ? `[${value}](${value})` : format ? format(value) : value}\n`;
-      }
-    });
+    addOptionalField("Age in Days", age_in_days);
+    addOptionalField("Vulnerability Status", vuln_status);
+    addOptionalField("Proof of Concept Available", is_poc ? 'Yes' : 'No');
+    addOptionalField("Remotely Exploitable", is_remote ? 'Yes' : 'No');
+    addOptionalField("Open Source Software", is_oss ? 'Yes' : 'No');
+    if (vendor_advisory) markdownOutput += `- **Vendor Advisory**: [View Advisory](${vendor_advisory})\n`;
+    addOptionalField("Template Available", is_template ? 'Yes' : 'No');
+    addOptionalField("Exploited in the Wild", is_exploited ? 'Yes' : 'No');
 
-    ['vulnerable_cpe', 'patch_url', 'shodan.query'].forEach(prop => {
-      const propValue = prop.split('.').reduce((acc, curr) => acc?.[curr], cve);
-      if (propValue?.length) {
-        const parts = prop.split('.');
-        const propName = parts[parts.length - 1];
-        const isLinkable = ['patch_url', 'vendor_advisory'].includes(prop); // Explicit check for fields that should be links
-        const list = propValue.map((item: any) => {
-          return `  - ${isLinkable ? `[${item}](${item})` : item}`;
-        }).join('\n');
-        // Ensuring propName is defined, using 'Unknown' as a fallback, which should never actually be used.
-        markdownOutput += `- **${(propName[0]?.toUpperCase() + propName.slice(1).replace('_', ' ') || 'Unknown')}**:\n${list}\n`;
+    if (hackerone?.rank || hackerone?.count !== undefined) {
+      markdownOutput += `- **HackerOne**: Rank ${hackerone.rank}, Reports ${hackerone.count}\n`;
+    }
+
+    if (shodan?.count) {
+      markdownOutput += `- **Shodan**: Count ${shodan.count}\n`;
+      if (shodan.query?.length) {
+        shodan.query.forEach((query: any) => markdownOutput += `  - Query: ${query}\n`);
       }
-    });
+    }
+
+    if (oss?.url) {
+      markdownOutput += `- **OSS**: [${oss.url}](${oss.url})\n`;
+    }
+
+    if (patch_url?.length) {
+      markdownOutput += `- **Patch URL**:\n`;
+      patch_url.forEach((url: any) => markdownOutput += `  - [Patch](${url})\n`);
+    }
 
     markdownOutput += "\n";
   });
