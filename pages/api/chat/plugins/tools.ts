@@ -12,6 +12,7 @@ import { isNaabuCommand, handleNaabuRequest } from './naabu/naabu.content';
 import { isHttpxCommand, handleHttpxRequest } from './httpx/httpx.content';
 import { isNucleiCommand, handleNucleiRequest } from './nuclei/nuclei.content';
 import { handleCyberChefRequest } from './cyberchef/cyberchef.content';
+import { isCvemapCommand, handleCvemapRequest } from './cvemap/cvemap.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
@@ -38,14 +39,17 @@ export const displayToolsHelpGuide = (toolUrls: {
   return (
     'Tools available in HackerGPT:' +
     '\n\n' +
+    `+ [Subfinder](${toolUrls.Subfinder}): ` +
+    'A robust discovery tool for passive enumeration on valid subdomains. Use /subfinder -h for more details.' +
+    '\n\n' +
+    `+ [CVEMap](${toolUrls.Cvemap}): ` +
+    'An tool that allows you to explore CVEs. Use /cvemap -h for more details.' +
+    '\n\n' +
     `+ [Nuclei](${toolUrls.Nuclei}): ` +
     'Fast and customisable vulnerability scanner. Use /nuclei -h for more details.' +
     '\n\n' +
     `+ [Katana](${toolUrls.Katana}): ` +
     'A web crawling framework designed to navigate and parse for hidden details. Use /katana -h for more details.' +
-    '\n\n' +
-    `+ [Subfinder](${toolUrls.Subfinder}): ` +
-    'A robust discovery tool for passive enumeration on valid subdomains. Use /subfinder -h for more details.' +
     '\n\n' +
     `+ [HttpX](${toolUrls.HttpX}): ` +
     'An HTTP toolkit that probes services, web servers, and other valuable metadata. Use /httpx -h for more details.' +
@@ -64,6 +68,8 @@ export const displayToolsHelpGuide = (toolUrls: {
 };
 
 const commandHandlers: CommandHandler = {
+  isCvemapCommand,
+  handleCvemapRequest,
   handleCyberChefRequest,
   isNucleiCommand,
   handleNucleiRequest,
@@ -85,6 +91,7 @@ const commandHandlers: CommandHandler = {
 
 export const toolUrls: ToolUrls = {
   Nuclei: 'https://github.com/projectdiscovery/nuclei',
+  Cvemap: 'https://github.com/projectdiscovery/cvemap',
   Subfinder: 'https://github.com/projectdiscovery/subfinder',
   Katana: 'https://github.com/projectdiscovery/katana',
   HttpX: 'https://github.com/projectdiscovery/httpx',
@@ -111,6 +118,7 @@ type ToolIdToHandlerMapping = {
 
 export const toolIdToHandlerMapping: ToolIdToHandlerMapping = {
   cyberchef: handleCyberChefRequest,
+  cvemap: handleCvemapRequest,
   nuclei: handleNucleiRequest,
   subfinder: handleSubfinderRequest,
   katana: handleKatanaRequest,

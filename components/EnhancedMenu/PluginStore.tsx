@@ -38,6 +38,19 @@ export const availablePlugins: Plugin[] = [
   },
   {
     id: 2,
+    name: 'CVEMap',
+    selectorName: 'CVEMap: Explore CVEs',
+    value: ToolID.CVEMAP,
+    icon: 'https://avatars.githubusercontent.com/u/50994705',
+    description:
+      'Efficiently explore CVE databases, linking vulnerabilities to exploits and remediations.',
+    categories: ['Free', 'Popular', 'New'],
+    githubRepoUrl: 'https://github.com/projectdiscovery/cvemap',
+    isInstalled: false,
+    isPremium: false,
+  },
+  {
+    id: 3,
     name: 'CyberChef',
     selectorName: 'CyberChef: Data Manipulation',
     value: ToolID.CYBERCHEF,
@@ -50,7 +63,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: false,
   },
   {
-    id: 3,
+    id: 4,
     name: 'Nuclei',
     selectorName: 'Nuclei: Discover Vulnerabilities',
     value: ToolID.NUCLEI,
@@ -62,7 +75,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 4,
+    id: 5,
     name: 'Katana',
     selectorName: 'Katana: Crawl Websites',
     value: ToolID.KATANA,
@@ -75,7 +88,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 5,
+    id: 6,
     name: 'HttpX',
     selectorName: 'HttpX: Web Analysis',
     value: ToolID.HTTPX,
@@ -88,7 +101,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 6,
+    id: 7,
     name: 'Naabu',
     selectorName: 'Naabu: Discover Ports',
     value: ToolID.NAABU,
@@ -101,7 +114,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: true,
   },
   {
-    id: 7,
+    id: 8,
     name: 'GAU',
     selectorName: 'GAU: Url Enumeration',
     value: ToolID.GAU,
@@ -114,7 +127,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: false,
   },
   {
-    id: 8,
+    id: 9,
     name: 'AlterX',
     selectorName: 'AlterX: Subdomain Wordlist Generator',
     value: ToolID.ALTERX,

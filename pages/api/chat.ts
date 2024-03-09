@@ -214,7 +214,8 @@ const handler = async (req: Request): Promise<Response> => {
               tool.toLowerCase() !== 'tools' &&
               tool.toLowerCase() !== 'subfinder' &&
               tool.toLowerCase() !== 'alterx' &&
-              tool.toLowerCase() !== 'gau'
+              tool.toLowerCase() !== 'gau' &&
+              tool.toLowerCase() !== 'cvemap'
             ) {
               const toolUrl = toolUrls[tool];
               return new Response(
