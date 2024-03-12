@@ -93,7 +93,7 @@ const parseCommandLine = (input: string): CvemapParams => {
   const MAX_INPUT_LENGTH = 500;
 
   const params: CvemapParams = {
-    limit: 50,
+    limit: 25,
     offset: 0,
     json: false,
   };
@@ -103,11 +103,13 @@ const parseCommandLine = (input: string): CvemapParams => {
     return params;
   }
 
-  const trimmedInput = input.trim().toLowerCase();
-  const args = trimmedInput.split(' ');
+  const trimmedInput = input.trim();
+  const argsRegex = /'[^']*'|[^\s]+/g;
+  const args =
+    trimmedInput.match(argsRegex)?.map((arg) => arg.replace(/^'|'$/g, '')) ||
+    [];
 
-  // Skipping the first argument if it's assumed to be the tool's name
-  if (args[0] === 'cvemap') {
+  if (args[0].toLowerCase() === 'cvemap') {
     args.shift();
   }
 
@@ -188,7 +190,9 @@ const parseCommandLine = (input: string): CvemapParams => {
       case '-l':
       case '-limit':
         const limit = parseInt(args[++i], 10);
-        if (!isNaN(limit)) params.limit = limit;
+        if (!isNaN(limit)) {
+          params.limit = limit > 25 ? 25 : limit;
+        }
         break;
       case '-offset':
         const offset = parseInt(args[++i], 10);
@@ -298,7 +302,10 @@ export async function handleCvemapRequest(
     return new Response(params.error, { status: 200, headers: corsHeaders });
   }
 
-  if (authToken !== process.env.SECRET_AUTH_PLUGINS_HACKERGPT_V2) {
+  if (
+    authToken !== process.env.SECRET_AUTH_PLUGINS_HACKERGPT_V2 &&
+    !process.env.SKIP_PLUGINS_STATUS_CHECK
+  ) {
     const rateLimitCheck = await checkToolRateLimit(authToken, toolId);
 
     if (rateLimitCheck.isRateLimited) {
@@ -422,7 +429,6 @@ export async function handleCvemapRequest(
           headers: {
             'Content-Type': 'application/json',
             Authorization: `${process.env.SECRET_AUTH_PLUGINS}`,
-              Host: 'plugins.hackergpt.co',
           },
           body: requestBodyJson,
         });
@@ -431,7 +437,7 @@ export async function handleCvemapRequest(
 
         cvemapData = processCvemapData(cvemapData);
 
-        if (!cvemapData || cvemapData.length === 0) {
+        if (!cvemapData || cvemapData.length <= 300) {
           sendMessage(
             '🔍 The scan is complete. No CVE entries were found based on your parameters.',
             true,
@@ -457,9 +463,7 @@ export async function handleCvemapRequest(
           });
         }
 
-        const responseString = createResponseString(
-          extractHostsFromCvemapData(cvemapData),
-        );
+        const responseString = formatCvemapOutput(cvemapData);
         sendMessage(responseString, true);
 
         controller.close();
@@ -483,31 +487,53 @@ export async function handleCvemapRequest(
   return new Response(stream, { headers });
 }
 
+function formatCvemapOutput(output: string): string {
+  const asciiArt = `
+    ______   _____  ____ ___  ____  ____
+   / ___/ | / / _ \\/ __ \\__ \\/ __ \\/ __ \\
+  / /__ | |/ /  __/ / / / / / /_/ / /_/ /
+  \\___/ |___/\\___/_/ /_/ /_/\\__,_/ .___/ 
+                                /_/            
+    projectdiscovery.io
+  `;
+
+  const parsedOutput = JSON.parse(output).output;
+
+  return (
+    `## CVE Details Report\n\n` +
+    '```\n' +
+    asciiArt +
+    '\n' +
+    parsedOutput +
+    '\n```'
+  );
+}
+
 const transformUserQueryToCvemapCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Based on this query, generate a command for the 'cvemap' tool, focusing on CVE (Common Vulnerabilities and Exposures) discovery. The command should prioritize the most relevant flags for CVE identification and filtering, ensuring the inclusion of flags that specify the criteria such as CVE ID, vendor, or product. The '-json' flag is required by defualt and should be not included only if specified in the user's request. The command should follow this structured format for clarity and accuracy:
+  Based on this query, generate a command for the 'cvemap' tool, focusing on CVE (Common Vulnerabilities and Exposures) discovery. The command should prioritize the most relevant flags for CVE identification and filtering, ensuring the inclusion of flags that specify the criteria such as CVE ID, vendor, or product. The '-json' flag is required by defualt, do not included only if user asked for it. The command should follow this structured format for clarity and accuracy:
   
   ALWAYS USE THIS FORMAT:
   \`\`\`json
-  { "command": "cvemap [flags] -json" }
+  { "command": "cvemap [flags]" }
   \`\`\`
   Include any of the additional flags only if they align with the specifics of the request. Ensure the command is properly escaped to be valid JSON.
 
   Command Construction Guidelines:
   1. **Selective Flag Use**: Carefully select flags that are directly pertinent to the task. The available flags are:
     - -id string[]: Specify CVE ID(s) for targeted searching. (e.g., "CVE-2023-0001")
-    - -cwe-id string[]: Filter CVEs by CWE ID(s) for category-specific searching. (e.g., "CWE-79")
-    - -vendor string[]: List CVEs associated with specific vendor(s). (e.g., "microsoft")
-    - -product string[]: Specify product(s) to filter CVEs accordingly. (e.g., "windows 10")
-    - -eproduct string[]: Exclude CVEs based on specified product(s). (e.g., "linux kernel")
-    - -severity string[]: Filter CVEs by given severity level(s). Options: LOW, MEDIUM, HIGH, CRITICAL (e.g., "HIGH")
-    - -cvss-score string[]: Filter CVEs by given CVSS score range. (e.g., "">=7"")
+    - -cwe-id string[]: Filter CVEs by CWE ID(s) for category-specific searching. (e.g., ""CWE-79"")
+    - -vendor string[]: List CVEs associated with specific vendor(s). (e.g., ""microsoft"")
+    - -product string[]: Specify product(s) to filter CVEs accordingly. (e.g., ""windows 10"")
+    - -eproduct string[]: Exclude CVEs based on specified product(s). (e.g., ""linux kernel"")
+    - -severity string[]: Filter CVEs by given severity level(s). Options: "low", "medium", "high", "critical"
+    - -cvss-score string[]: Filter CVEs by given CVSS score range. (e.g., "">= 7"")
     - -cpe string: Specify a CPE URI to filter CVEs related to a particular product and version. (e.g., "cpe:/a:microsoft:windows_10")
     - -epss-score string: Filter CVEs by EPSS score. (e.g., ">=0.01")
-    - -epss-percentile string[]: Filter CVEs by given EPSS percentile. (e.g., "">=90"")
-    - -age string: Filter CVEs published within a specified age in days. (e.g., "">365"", "360")
+    - -epss-percentile string[]: Filter CVEs by given EPSS percentile. (e.g., "">= 90"")
+    - -age string: Filter CVEs published within a specified age in days. (e.g., ""> 365"", "360")
     - -assignee string[]: List CVEs for a given publisher assignee. (e.g., "cve@mitre.org")
     - -vstatus value: Filter CVEs by given vulnerability status in CLI output. Supported values: new, confirmed, unconfirmed, modified, rejected, unknown (e.g., "confirmed")
     - -search string: Search within CVE data for specific terms. (e.g., "xss")
@@ -525,13 +551,15 @@ const transformUserQueryToCvemapCommand = (lastMessage: Message) => {
     - -silent: Minimize output to essential information only.
     - -verbose: Provide detailed output for debugging purposes.
     - -help: Provide all flags avaiable and information about tool.
+    - -json: Return output in json format. 
     Do not include any flags not listed here. Use these flags to align with the request's specific requirements. All flags are optional.
-  2. **Relevance and Efficiency**: Ensure that the flags chosen for the command are relevant and contribute to an effective and efficient CVEs discovery process.
+  2. **Quotes around flag content**: If flag content has space between like "windows 10," use "'windows 10'" for any flag. Or another example like "> 15" use "'> 15'" for any flag. Their should always be space between sign like ">", "<", "=", ... and the number. 
+  3. **Relevance and Efficiency**: Ensure that the flags chosen for the command are relevant and contribute to an effective and efficient CVEs discovery process.
 
   Example Commands:
   For listing recent critical CVEs with publicly available PoCs:
   \`\`\`json
-  { "command": "cvemap -s critical -poc true -l 10" }
+  { "command": "cvemap -severity critical -poc true -limit 10 -json" }
   \`\`\`
 
   For a request for help or all flags:
@@ -551,94 +579,197 @@ const processCvemapData = (data: string) => {
     .join('');
 };
 
-const extractHostsFromCvemapData = (data: string) => {
-  try {
-    const validJsonString = '[' + data.replace(/}{/g, '},{') + ']';
-
-    const jsonData = JSON.parse(validJsonString);
-
-    return jsonData
-      .map((item: { host: any }) => item.host)
-      .filter((host: undefined) => host !== undefined)
-      .join('\n');
-  } catch (error) {
-    console.error('Error processing data:', error);
-    return '';
-  }
-};
-
 const createResponseString = (cvemapData: string) => {
   const outerData = JSON.parse(cvemapData);
   const data = JSON.parse(outerData.output);
-  let markdownOutput = `## CVE Details Report\n\n`;
+  let markdownOutput = `# CVE Discovery\n\n`;
 
-  data.forEach((cve: { cve_id: any; cve_description: any; severity: any; cvss_score: any; cvss_metrics: any; weaknesses: any; cpe: any; reference: any; poc: any; age_in_days: any; vuln_status: any; is_poc: any; is_remote: any; is_oss: any; vulnerable_cpe: any; vendor_advisory: any; patch_url: any; is_template: any; is_exploited: any; hackerone: any; shodan: any; oss: any; }) => {
-    const { cve_id, cve_description, severity, cvss_score, cvss_metrics, weaknesses, cpe, reference, poc, age_in_days, vuln_status, is_poc, is_remote, is_oss, vulnerable_cpe, vendor_advisory, patch_url, is_template, is_exploited, hackerone, shodan, oss } = cve;
+  const formatTime = (timeValue: string | Date) => {
+    return new Date(timeValue).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
-    markdownOutput += `### ${cve_id}\n`;
-    markdownOutput += `- **Description**: ${cve_description}\n`;
-    markdownOutput += `- **Severity**: ${severity}, **CVSS Score**: ${cvss_score} (${cvss_metrics?.cvss31?.vector})\n`;
+  const addTimeField = (label: string, timeValue: string | Date) => {
+    markdownOutput += `- **${label}**: ${formatTime(timeValue)}\n`;
+  };
 
-    if (weaknesses?.length) {
-      markdownOutput += `- **Weaknesses**:\n`;
-      weaknesses.forEach((w: { cwe_name: any; cwe_id: any; }) => markdownOutput += `  - ${w.cwe_name || w.cwe_id}\n`);
-    }
+  const addOptionalField = (label: string, value: string) => {
+    if (value) markdownOutput += `- **${label}**: ${value}\n`;
+  };
 
-    if (cpe?.vendor || cpe?.product) {
-      markdownOutput += `- **CPE**: ${cpe.vendor || 'Unknown vendor'}:${cpe.product || 'Unknown product'}\n`;
-    }
+  data.forEach(
+    (cve: {
+      nuclei_templates?: {
+        created_at: string;
+        template_issue: string;
+        template_issue_type: string;
+        template_path: string;
+        template_pr: string;
+        template_url: string;
+        updated_at: string;
+      };
+      cve_id: any;
+      cve_description: any;
+      severity: any;
+      cvss_score: any;
+      cvss_metrics: any;
+      epss_percentile: any;
+      published_at: any;
+      updated_at: any;
+      weaknesses: any;
+      cpe: any;
+      reference: any;
+      poc: any;
+      age_in_days: any;
+      vuln_status: any;
+      is_poc: any;
+      is_remote: any;
+      is_oss: any;
+      vulnerable_cpe: any;
+      vendor_advisory: any;
+      patch_url: any;
+      is_template: any;
+      is_exploited: any;
+      hackerone: any;
+      shodan: any;
+      oss: any;
+    }) => {
+      const {
+        nuclei_templates,
+        cve_id,
+        cve_description,
+        severity,
+        cvss_score,
+        cvss_metrics,
+        published_at,
+        epss_percentile,
+        updated_at,
+        weaknesses,
+        cpe,
+        reference,
+        poc,
+        age_in_days,
+        vuln_status,
+        is_poc,
+        is_remote,
+        is_oss,
+        vulnerable_cpe,
+        vendor_advisory,
+        patch_url,
+        is_template,
+        is_exploited,
+        hackerone,
+        shodan,
+        oss,
+      } = cve;
 
-    if (reference?.length) {
-      markdownOutput += `- **References**:\n`;
-      reference.forEach((ref: any) => markdownOutput += `  - [${ref}](${ref})\n`);
-    }
-
-    if (poc?.length) {
-      markdownOutput += `- **Proof of Concept**:\n\n`;
-      markdownOutput += `| URL | Source | Added At |\n`;
-      markdownOutput += `| --- | ------ | -------- |\n`;
-      poc.forEach((p: { added_at: string | number | Date; url: any; source: any; }) => {
-        const addedAtFormatted = new Date(p.added_at).toISOString().split('T')[0]; // ISO date without time
-        markdownOutput += `| [${p.url}](${p.url}) | ${p.source} | ${addedAtFormatted} |\n`;
-      });
-    }
-
-    // Optional fields handled gracefully
-    const addOptionalField = (label: string, value: string) => {
-      if (value) markdownOutput += `- **${label}**: ${value}\n`;
-    };
-
-    addOptionalField("Age in Days", age_in_days);
-    addOptionalField("Vulnerability Status", vuln_status);
-    addOptionalField("Proof of Concept Available", is_poc ? 'Yes' : 'No');
-    addOptionalField("Remotely Exploitable", is_remote ? 'Yes' : 'No');
-    addOptionalField("Open Source Software", is_oss ? 'Yes' : 'No');
-    if (vendor_advisory) markdownOutput += `- **Vendor Advisory**: [View Advisory](${vendor_advisory})\n`;
-    addOptionalField("Template Available", is_template ? 'Yes' : 'No');
-    addOptionalField("Exploited in the Wild", is_exploited ? 'Yes' : 'No');
-
-    if (hackerone?.rank || hackerone?.count !== undefined) {
-      markdownOutput += `- **HackerOne**: Rank ${hackerone.rank}, Reports ${hackerone.count}\n`;
-    }
-
-    if (shodan?.count) {
-      markdownOutput += `- **Shodan**: Count ${shodan.count}\n`;
-      if (shodan.query?.length) {
-        shodan.query.forEach((query: any) => markdownOutput += `  - Query: ${query}\n`);
+      markdownOutput += `## ${cve_id}\n`;
+      markdownOutput += `### Overview\n`;
+      markdownOutput += `- **Severity**: ${severity[0].toUpperCase() + severity.slice(1)} | **CVSS Score**: ${cvss_score}\n`;
+      markdownOutput += `- **CVSS Vector**: (${cvss_metrics?.cvss31?.vector})\n`;
+      if (weaknesses?.length) {
+        markdownOutput += `- **Weaknesses**:\n`;
+        weaknesses.forEach(
+          (w: { cwe_name: any; cwe_id: any }) =>
+            (markdownOutput += `  - ${w.cwe_name || w.cwe_id}\n`),
+        );
       }
-    }
+      if (epss_percentile?.length) {
+        markdownOutput += `- **EPSS**: ${epss_percentile} %\n`;
+      }
+      let timeInfo = '';
+      addOptionalField('**Days Since Publish**:', age_in_days);
+      if (cve.published_at?.length)
+        timeInfo += `**Published At:** ${formatTime(cve.published_at)}`;
+      if (cve.updated_at?.length)
+        timeInfo += ` | **Updated At**: ${formatTime(cve.updated_at)}`;
+      if (timeInfo) markdownOutput += `- ${timeInfo}\n`;
+      if (cpe?.vendor || cpe?.product) {
+        markdownOutput += `- **CPE**: ${cpe.vendor || 'Unknown vendor'}:${cpe.product || 'Unknown product'}\n`;
+      }
 
-    if (oss?.url) {
-      markdownOutput += `- **OSS**: [${oss.url}](${oss.url})\n`;
-    }
+      markdownOutput += `### Description\n${cve_description}\n`;
 
-    if (patch_url?.length) {
-      markdownOutput += `- **Patch URL**:\n`;
-      patch_url.forEach((url: any) => markdownOutput += `  - [Patch](${url})\n`);
-    }
+      if (reference?.length) {
+        markdownOutput += `### References:\n`;
+        reference.forEach(
+          (ref: any) => (markdownOutput += `  - [${ref}](${ref})\n`),
+        );
+      }
 
-    markdownOutput += "\n";
-  });
+      if (poc?.length) {
+        markdownOutput += `### Proof of Concept:\n\n`;
+        markdownOutput += `| URL | Source | Added At |\n`;
+        markdownOutput += `| --- | ------ | -------- |\n`;
+        poc.forEach((p: { added_at: string | Date; url: any; source: any }) => {
+          const addedAtFormatted = formatTime(p.added_at);
+          markdownOutput += `| [${p.url}](${p.url}) | ${p.source} | ${addedAtFormatted} |\n`;
+        });
+      } else {
+        markdownOutput += `\n### Proof of Concept Available: ${is_poc ? 'Yes' : 'No'}\n`;
+      }
+
+      if (nuclei_templates) {
+        const {
+          created_at,
+          template_issue,
+          template_issue_type,
+          template_path,
+          template_pr,
+          template_url,
+          updated_at,
+        } = nuclei_templates;
+        markdownOutput += `### Nuclei Template Data\n`;
+        markdownOutput += `- **Created At**: ${created_at}\n`;
+        markdownOutput += `- **Template Issue**: [${template_issue}](${template_issue})\n`;
+        markdownOutput += `- **Template Issue Type**: ${template_issue_type}\n`;
+        markdownOutput += `- **Template Path**: ${template_path}\n`;
+        markdownOutput += `- **Template PR**: [${template_pr}](${template_pr})\n`;
+        markdownOutput += `- **Template URL**: [${template_url}](${template_url})\n`;
+        markdownOutput += `- **Updated At**: ${updated_at}\n\n`;
+      } else {
+        markdownOutput += `\n### Nuclei Template Available: ${is_template ? 'Yes' : 'No'}\n`;
+      }
+
+      // if (hackerone?.rank || hackerone?.count !== undefined) {
+      //   markdownOutput += `- **HackerOne**: Rank ${hackerone.rank}, Reports ${hackerone.count}\n`;
+      // }
+
+      if (shodan?.count) {
+        markdownOutput += `### Shodan Data\n`;
+        markdownOutput += `- **Number of Results**: ${shodan.count}\n`;
+        if (shodan.query?.length) {
+          markdownOutput += `- **Queries**:\n`;
+          shodan.query.forEach(
+            (query: any) => (markdownOutput += `  - \`${query}\`\n`),
+          );
+        }
+      }
+
+      markdownOutput += `### Other\n`;
+
+      addOptionalField('Vulnerability Status', vuln_status);
+      addOptionalField('Remotely Exploitable', is_remote ? 'Yes' : 'No');
+      addOptionalField('Open Source Software', is_oss ? 'Yes' : 'No');
+      if (vendor_advisory)
+        markdownOutput += `- **Vendor Advisory**: ${vendor_advisory}\n`;
+      addOptionalField('Exploited in the Wild', is_exploited ? 'Yes' : 'No');
+
+      if (oss?.url) {
+        markdownOutput += `- **OSS**: [${oss.url}](${oss.url})\n`;
+      }
+
+      if (patch_url?.length) {
+        markdownOutput += `- **Patch URL**:\n`;
+        patch_url.forEach((url: any) => (markdownOutput += `  - ${url}\n`));
+      }
+
+      markdownOutput += '\n';
+    },
+  );
 
   return markdownOutput;
 };
