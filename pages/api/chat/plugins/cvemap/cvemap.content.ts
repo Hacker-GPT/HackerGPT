@@ -35,10 +35,6 @@ const displayHelpGuide = () => {
         -a, -assignee string[]          cve to list for given publisher assignee
         -vs, -vstatus value             cve to list for given vulnerability status in cli output. supported: new, confirmed, unconfirmed, modified, rejected, unknown
 
-    UPDATE:
-        -up, -update                 update cvemap to latest version
-        -duc, -disable-update-check  disable automatic cvemap update check
-
     FILTER:
         -q, -search string  search in cve data
         -k, -kev            display cves marked as exploitable vulnerabilities by cisa (default true)
@@ -63,25 +59,25 @@ const displayHelpGuide = () => {
 interface CvemapParams {
   ids?: string[];
   cwes?: string[];
-  vendors?: string[];
-  products?: string[];
-  excludeProducts?: string[];
-  severity?: string[];
-  cvssScores?: string[];
+  vendors?: string;
+  products?: string;
+  excludeProducts?: string;
+  severity?: string;
+  cvssScores?: string;
   cpe?: string;
   epssScores?: string;
-  epssPercentiles?: string[];
+  epssPercentiles?: string;
   age?: string;
-  assignees?: string[];
+  assignees?: string;
   vulnerabilityStatus?: string;
-  searchTerms?: string[];
+  search?: string;
   kev?: boolean;
   template?: boolean;
   poc?: boolean;
   hackerone?: boolean;
   remote?: boolean;
-  fieldsToDisplay?: string[];
-  excludeFields?: string[];
+  fieldsToDisplay?: string;
+  excludeFields?: string;
   listIdsOnly?: boolean;
   limit?: number;
   offset?: number;
@@ -125,22 +121,22 @@ const parseCommandLine = (input: string): CvemapParams => {
         break;
       case '-v':
       case '-vendor':
-        params.vendors = args[++i].split(',');
+        params.vendors = args[++i];
         break;
       case '-p':
       case '-product':
-        params.products = args[++i].split(',');
+        params.products = args[++i];
         break;
       case '-eproduct':
-        params.excludeProducts = args[++i].split(',');
+        params.excludeProducts = args[++i];
         break;
       case '-s':
       case '-severity':
-        params.severity = args[++i].split(',');
+        params.severity = args[++i];
         break;
       case '-cs':
       case '-cvss-score':
-        params.cvssScores = args[++i].split(',');
+        params.cvssScores = args[++i];
         break;
       case '-cpe':
         params.cpe = args[++i];
@@ -149,19 +145,19 @@ const parseCommandLine = (input: string): CvemapParams => {
         params.epssScores = args[++i];
         break;
       case '-epss-percentile':
-        params.epssPercentiles = args[++i].split(',');
+        params.epssPercentiles = args[++i];
         break;
       case '-age':
         params.age = args[++i];
         break;
       case '-assignee':
-        params.assignees = args[++i].split(',');
+        params.assignees = args[++i];
         break;
       case '-vstatus':
         params.vulnerabilityStatus = args[++i];
         break;
       case '-search':
-        params.searchTerms = args[++i].split(',');
+        params.search = args[++i];
         break;
       case '-kev':
         params.kev = true;
@@ -179,10 +175,10 @@ const parseCommandLine = (input: string): CvemapParams => {
         params.remote = true;
         break;
       case '-fields':
-        params.fieldsToDisplay = args[++i].split(',');
+        params.fieldsToDisplay = args[++i];
         break;
       case '-exclude-fields':
-        params.excludeFields = args[++i].split(',');
+        params.excludeFields = args[++i];
         break;
       case '-list-id':
         params.listIdsOnly = true;
@@ -316,16 +312,16 @@ export async function handleCvemapRequest(
   interface CvemapRequestBody {
     ids?: string[];
     cwes?: string[];
-    vendors?: string[];
-    products?: string[];
-    excludeProducts?: string[];
-    severity?: string[];
-    cvssScores?: string[];
+    vendors?: string;
+    products?: string;
+    excludeProducts?: string;
+    severity?: string;
+    cvssScores?: string;
     cpe?: string;
     epssScores?: string;
-    epssPercentiles?: string[];
+    epssPercentiles?: string;
     age?: string;
-    assignees?: string[];
+    assignees?: string;
     vstatus?: string;
     search?: string;
     kev?: boolean;
@@ -333,8 +329,8 @@ export async function handleCvemapRequest(
     poc?: boolean;
     hackerone?: boolean;
     remote?: boolean;
-    fields?: string[];
-    excludeFields?: string[];
+    fields?: string;
+    excludeFields?: string;
     listId?: boolean;
     limit?: number;
     offset?: number;
@@ -354,24 +350,25 @@ export async function handleCvemapRequest(
     if (userInputs.cwes && userInputs.cwes.length)
       requestBody.cwes = userInputs.cwes;
     if (userInputs.vendors && userInputs.vendors.length)
-      requestBody.vendors = userInputs.vendors;
+      requestBody.vendors = `'${userInputs.vendors}'`;
     if (userInputs.products && userInputs.products.length)
-      requestBody.products = userInputs.products;
+      requestBody.products = `'${userInputs.products}'`;
     if (userInputs.excludeProducts && userInputs.excludeProducts.length)
-      requestBody.excludeProducts = userInputs.excludeProducts;
+      requestBody.excludeProducts = `'${userInputs.excludeProducts}'`;
     if (userInputs.severity && userInputs.severity.length)
-      requestBody.severity = userInputs.severity;
+      requestBody.severity = `'${userInputs.severity}'`;
     if (userInputs.cvssScores && userInputs.cvssScores.length)
-      requestBody.cvssScores = userInputs.cvssScores;
-    if (userInputs.cpe) requestBody.cpe = userInputs.cpe;
-    if (userInputs.epssScores) requestBody.epssScores = userInputs.epssScores;
+      requestBody.cvssScores = `'${userInputs.cvssScores}'`;
+    if (userInputs.cpe) requestBody.cpe = `'${userInputs.cpe}'`;
+    if (userInputs.epssScores)
+      requestBody.epssScores = `'${userInputs.epssScores}'`;
     if (userInputs.epssPercentiles && userInputs.epssPercentiles.length)
-      requestBody.epssPercentiles = userInputs.epssPercentiles;
-    if (userInputs.age) requestBody.age = userInputs.age;
+      requestBody.epssPercentiles = `'${userInputs.epssPercentiles}'`;
+    if (userInputs.age) requestBody.age = `'${userInputs.age}'`;
     if (userInputs.assignees && userInputs.assignees.length)
-      requestBody.assignees = userInputs.assignees;
-    if (userInputs.vstatus) requestBody.vstatus = userInputs.vstatus;
-    if (userInputs.search) requestBody.search = userInputs.search;
+      requestBody.assignees = `'${userInputs.assignees}'`;
+    if (userInputs.vstatus) requestBody.vstatus = `'${userInputs.vstatus}'`;
+    if (userInputs.search) requestBody.search = `'${userInputs.search}'`;
     if (userInputs.kev !== undefined) requestBody.kev = userInputs.kev;
     if (userInputs.template !== undefined)
       requestBody.template = userInputs.template;
@@ -380,10 +377,10 @@ export async function handleCvemapRequest(
       requestBody.hackerone = userInputs.hackerone;
     if (userInputs.remote !== undefined) requestBody.remote = userInputs.remote;
     if (userInputs.fields && userInputs.fields.length > 0) {
-      requestBody.fields = userInputs.fields;
+      requestBody.fields = `'${userInputs.fields}'`;
     }
     if (userInputs.excludeFields && userInputs.excludeFields.length > 0) {
-      requestBody.excludeFields = userInputs.excludeFields;
+      requestBody.excludeFields = `'${userInputs.excludeFields}'`;
     }
     if (userInputs.listId !== undefined) requestBody.listId = userInputs.listId;
     if (userInputs.limit !== undefined) requestBody.limit = userInputs.limit;
@@ -453,7 +450,7 @@ export async function handleCvemapRequest(
         clearInterval(intervalId);
         // sendMessage('✅ CVE scan completed! Processing the results...', true);
 
-        if (params.json) {
+        if (params.json && !cvemapData.includes('╭──────')) {
           const responseString = createResponseString(cvemapData);
           sendMessage(responseString, true);
           controller.close();
@@ -529,7 +526,7 @@ const transformUserQueryToCvemapCommand = (lastMessage: Message) => {
     - -product string[]: Specify product(s) to filter CVEs accordingly. (e.g., ""windows 10"")
     - -eproduct string[]: Exclude CVEs based on specified product(s). (e.g., ""linux kernel"")
     - -severity string[]: Filter CVEs by given severity level(s). Options: "low", "medium", "high", "critical"
-    - -cvss-score string[]: Filter CVEs by given CVSS score range. (e.g., "">= 7"")
+    - -cvss-score string[]: Filter CVEs by given CVSS score range. (e.g., ""> 7"")
     - -cpe string: Specify a CPE URI to filter CVEs related to a particular product and version. (e.g., "cpe:/a:microsoft:windows_10")
     - -epss-score string: Filter CVEs by EPSS score. (e.g., ">=0.01")
     - -epss-percentile string[]: Filter CVEs by given EPSS percentile. (e.g., "">= 90"")
