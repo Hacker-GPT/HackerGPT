@@ -27,7 +27,7 @@ export const ModelSelect = () => {
       return;
     }
     if (
-      (modelName === 'GPT-4' || modelName === 'Web Browsing (GPT-4)') &&
+      (modelName === 'HackerGPT Pro' || modelName === 'Web Browsing (GPT-4)') &&
       !isPremium
     ) {
       return;
@@ -152,8 +152,8 @@ export const ModelSelect = () => {
             .sort((a, b) => {
               if (a.name === 'HackerGPT') return -1;
               if (b.name === 'HackerGPT') return 1;
-              if (a.name === 'GPT-4') return -1;
-              if (b.name === 'GPT-4') return 1;
+              if (a.name === 'HackerGPT Pro') return -1;
+              if (b.name === 'HackerGPT Pro') return 1;
               return a.name.localeCompare(b.name);
             })
             .map((model, index) => (

@@ -76,7 +76,7 @@ const PluginSelector = () => {
       toolId !== 'plugins_store' &&
       selectedConversation?.model.id !== OpenAIModelID.HackerGPT_PRO
     ) {
-      alert(t('This plugin is only available with the HackerGPT Pro model.'));
+      alert(t('Use the HackerGPT Pro model for this plugin.'));
       return;
     }
 
