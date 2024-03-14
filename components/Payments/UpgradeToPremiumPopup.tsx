@@ -59,9 +59,7 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
   }, [isOpen]);
 
   const upgradeToPremium = () => {
-    if (checkoutUrl) {
-      router.push(checkoutUrl);
-    }
+    router.push('https://chat.hackerai.co/login');
   };
 
   // const fetchCryptoCharge = async () => {
@@ -186,7 +184,7 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                         <div className="flex items-center justify-between">
                           <h3 className="mb-2 text-lg font-bold">Pro</h3>
                           <div className="mb-2 text-lg text-[#8e8ea0]">
-                            USD $20/month
+                            USD $29/month
                           </div>
                         </div>
                         <div className="flex flex-col gap-0 md:flex-row md:gap-2">
@@ -199,7 +197,9 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                               size={22}
                               strokeWidth={2}
                             />
-                            Upgrade to Pro
+                            <span className="ml-2">
+                              Upgrade to Pro (HackerGPT v2)
+                            </span>
                           </button>
                           {/* <button
                             onClick={payWithCrypto}
