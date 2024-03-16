@@ -14,7 +14,7 @@
     "@dqbd/tiktoken": "^1.0.7",
     "@headlessui/react": "^1.7.18",
     "@tabler/icons-react": "^3.0.0",
-    "@vercel/analytics": "^1.1.2",
+    "@vercel/analytics": "^1.2.2",
     "@vercel/kv": "^0.2.4",
     "cheerio": "^1.0.0-rc.12",
     "eventsource-parser": "^1.1.2",
