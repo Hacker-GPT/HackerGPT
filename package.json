@@ -13,7 +13,7 @@
     "@babel/traverse": "^7.23.9",
     "@dqbd/tiktoken": "^1.0.7",
     "@headlessui/react": "^1.7.18",
-    "@tabler/icons-react": "^3.0.0",
+    "@tabler/icons-react": "^3.1.0",
     "@vercel/analytics": "^1.2.2",
     "@vercel/kv": "^0.2.4",
     "cheerio": "^1.0.0-rc.12",
