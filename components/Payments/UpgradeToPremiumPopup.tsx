@@ -184,7 +184,7 @@ const UpgradeToPremiumPopup: React.FC<Props> = ({
                         <div className="flex items-center justify-between">
                           <h3 className="mb-2 text-lg font-bold">Pro</h3>
                           <div className="mb-2 text-lg text-[#8e8ea0]">
-                            USD $29/month
+                            USD $20/month
                           </div>
                         </div>
                         <div className="flex flex-col gap-0 md:flex-row md:gap-2">
