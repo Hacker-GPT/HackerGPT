@@ -378,8 +378,6 @@ const transformUserQueryToCyberChefCommand = (lastMessage: Message) => {
   
     Based on this query, generate a command for the 'CyberChef' tool using the specified operations ('op') and recipe structures, or use CyberChef Magic if the format is not provided. Ensure that the command follows the required JSON format and only includes the provided operations.
 
-    If the query is a general inquiry like 'Ok look, now I'm using a plugin. What does it do?', provide a clear, few sentences, and concise explanation about the functionality and features of the CyberChef tool inside of HackerGPT. Explain that CyberChef is can be used to used to do various data manipulation tasks, such as data encoding, decoding, compression, encryption, and hashing.
-
     IMPORTANT: The AI response must strictly adhere to the JSON format specified below for CyberChef Bake. For CyberChef Magic, no specific format is required.
   
     FORMAT FOR AI RESPONSE (CyberChef Bake):
