@@ -97,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
 
-    const lastMessage = messages[messages.length - 1];
+    const lastMessage = messages[messages.length - 2];
     const lastMessageTokens = encoding.encode(lastMessage.content);
 
     if (lastMessageTokens.length + reservedTokens > tokenLimit) {
