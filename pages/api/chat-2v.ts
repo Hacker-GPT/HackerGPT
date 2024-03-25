@@ -62,6 +62,8 @@ const handler = async (req: Request): Promise<Response> => {
     let { messages, model, max_tokens, temperature, stream, toolId } =
       (await req.json()) as ChatBody;
 
+    messages = messages.slice(1, -1);
+
     let answerMessage: Message = { role: 'user', content: '' };
 
     max_tokens = max_tokens || 1000;
@@ -97,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
     const prompt_tokens = encoding.encode(promptToSend()!);
     let tokenCount = prompt_tokens.length;
 
-    const lastMessage = messages[messages.length - 2];
+    const lastMessage = messages[messages.length - 1];
     const lastMessageTokens = encoding.encode(lastMessage.content);
 
     if (lastMessageTokens.length + reservedTokens > tokenLimit) {
