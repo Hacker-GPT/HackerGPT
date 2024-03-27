@@ -13,6 +13,7 @@ import { isHttpxCommand, handleHttpxRequest } from './httpx/httpx.content';
 import { isNucleiCommand, handleNucleiRequest } from './nuclei/nuclei.content';
 import { handleCyberChefRequest } from './cyberchef/cyberchef.content';
 import { isCvemapCommand, handleCvemapRequest } from './cvemap/cvemap.content';
+import { isGoLinkFinderCommand, handleGoLinkFinderRequest } from './golinkfinder/golinkfinder.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
@@ -45,6 +46,9 @@ export const displayToolsHelpGuide = (toolUrls: {
     `+ [CVEMap](${toolUrls.Cvemap}): ` +
     'An tool that allows you to explore CVEs. Use /cvemap -h for more details.' +
     '\n\n' +
+    `+ [GoLinkFinder](${toolUrls.GoLinkFinder}): ` +
+    'Extracts endpoints from HTML and JS files for web recon. Use /golinkfinder -h for more details.' +
+    '\n\n' +
     `+ [Nuclei](${toolUrls.Nuclei}): ` +
     'Fast and customisable vulnerability scanner. Use /nuclei -h for more details.' +
     '\n\n' +
@@ -70,6 +74,8 @@ export const displayToolsHelpGuide = (toolUrls: {
 const commandHandlers: CommandHandler = {
   isCvemapCommand,
   handleCvemapRequest,
+  isGoLinkFinderCommand,
+  handleGoLinkFinderRequest,
   handleCyberChefRequest,
   isNucleiCommand,
   handleNucleiRequest,
@@ -93,6 +99,7 @@ export const toolUrls: ToolUrls = {
   Nuclei: 'https://github.com/projectdiscovery/nuclei',
   Cvemap: 'https://github.com/projectdiscovery/cvemap',
   Subfinder: 'https://github.com/projectdiscovery/subfinder',
+  GoLinkFinder: 'https://github.com/0xsha/GoLinkFinder',
   Katana: 'https://github.com/projectdiscovery/katana',
   HttpX: 'https://github.com/projectdiscovery/httpx',
   Naabu: 'https://github.com/projectdiscovery/naabu',
@@ -118,6 +125,7 @@ type ToolIdToHandlerMapping = {
 
 export const toolIdToHandlerMapping: ToolIdToHandlerMapping = {
   cyberchef: handleCyberChefRequest,
+  golinkfinder: handleGoLinkFinderRequest,
   cvemap: handleCvemapRequest,
   nuclei: handleNucleiRequest,
   subfinder: handleSubfinderRequest,

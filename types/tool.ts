@@ -8,6 +8,7 @@ export interface Tool {
 export enum ToolID {
   CYBERCHEF = 'cyberchef',
   CVEMAP = 'cvemap',
+  GOLINKFINDER = 'golinkfinder',
   NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
   KATANA = 'katana',
@@ -21,6 +22,7 @@ export enum ToolID {
 
 export enum ToolName {
   CYBERCHEF = 'cyberchef',
+  GOLINKFINDER = 'golinkfinder',
   CVEMAP = 'cvemap',
   NUCLEI = 'nuclei',
   SUBFINDER = 'subfinder',
@@ -37,6 +39,10 @@ export const Tools: Record<ToolID, Tool> = {
   [ToolID.CVEMAP]: {
     id: ToolID.CVEMAP,
     name: ToolName.CVEMAP,
+  },
+  [ToolID.GOLINKFINDER]: {
+    id: ToolID.GOLINKFINDER,
+    name: ToolName.GOLINKFINDER,
   },
   [ToolID.CYBERCHEF]: {
     id: ToolID.CYBERCHEF,

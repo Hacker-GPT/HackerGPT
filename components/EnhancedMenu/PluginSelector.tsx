@@ -72,7 +72,8 @@ const PluginSelector = () => {
       toolId !== ToolID.ALTERX &&
       toolId !== ToolID.GAU &&
       toolId !== ToolID.CYBERCHEF &&
-      toolId !== ToolID.CVEMAP &&
+      toolId !== ToolID.CVEMAP && 
+      toolId !== ToolID.GOLINKFINDER &&
       toolId !== 'plugins_store' &&
       selectedConversation?.model.id !== OpenAIModelID.HackerGPT_PRO
     ) {

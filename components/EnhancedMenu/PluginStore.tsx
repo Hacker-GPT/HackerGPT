@@ -69,7 +69,7 @@ export const availablePlugins: Plugin[] = [
     value: ToolID.NUCLEI,
     icon: 'https://avatars.githubusercontent.com/u/50994705',
     description: 'Fast and customisable vulnerability scanner',
-    categories: ['New', 'Popular'],
+    categories: ['Popular'],
     githubRepoUrl: 'https://github.com/projectdiscovery/nuclei',
     isInstalled: false,
     isPremium: true,
@@ -82,7 +82,7 @@ export const availablePlugins: Plugin[] = [
     icon: 'https://avatars.githubusercontent.com/u/50994705',
     description:
       'A web crawling framework designed to navigate and parse for hidden details',
-    categories: ['New', 'Popular'],
+    categories: ['Popular'],
     githubRepoUrl: 'https://github.com/projectdiscovery/katana',
     isInstalled: false,
     isPremium: true,
@@ -95,7 +95,7 @@ export const availablePlugins: Plugin[] = [
     icon: 'https://avatars.githubusercontent.com/u/50994705',
     description:
       'An HTTP toolkit that probes services, web servers, and other valuable metadata',
-    categories: ['New', 'Popular'],
+    categories: ['Popular'],
     githubRepoUrl: 'https://github.com/projectdiscovery/httpx',
     isInstalled: false,
     isPremium: true,
@@ -108,15 +108,28 @@ export const availablePlugins: Plugin[] = [
     icon: 'https://avatars.githubusercontent.com/u/50994705',
     description:
       'A fast port scanner designed to scan large networks at high speed',
-    categories: ['New', 'Popular'],
+    categories: ['Popular'],
     githubRepoUrl: 'https://github.com/projectdiscovery/naabu',
     isInstalled: false,
     isPremium: true,
   },
   {
     id: 8,
+    name: 'GoLinkFinder',
+    selectorName: 'GoLinkFinder: URL Extraction',
+    value: ToolID.GOLINKFINDER,
+    icon: 'https://cdn-icons-png.flaticon.com/512/5972/5972097.png',
+    description:
+      'A minimalistic JavaScript endpoint extractor.',
+    categories: ['Free', 'New', 'Popular'],
+    githubRepoUrl: 'https://github.com/0xsha/GoLinkFinder',
+    isInstalled: false,
+    isPremium: false,
+  },
+  {
+    id: 9,
     name: 'GAU',
-    selectorName: 'GAU: Url Enumeration',
+    selectorName: 'GAU: URL Enumeration',
     value: ToolID.GAU,
     icon: 'https://avatars.githubusercontent.com/u/19563282',
     description:
@@ -127,7 +140,7 @@ export const availablePlugins: Plugin[] = [
     isPremium: false,
   },
   {
-    id: 9,
+    id: 10,
     name: 'AlterX',
     selectorName: 'AlterX: Subdomain Wordlist Generator',
     value: ToolID.ALTERX,
