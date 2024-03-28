@@ -150,7 +150,7 @@ export async function handleGoLinkFinderRequest(
   }
 
   const parts = lastMessage.content.split(' ');
-  if (parts.includes('-h') || parts.includes('-help')) {
+  if (parts.includes('-h') || parts.includes('-help') || parts.includes('--help')) {
     return new Response(displayHelpGuide(), {
       status: 200,
       headers: corsHeaders,
