@@ -48,7 +48,6 @@ const parseGoLinkFinderCommandLine = (input: string): GoLinkFinderParams => {
   args.shift();
 
   for (let i = 0; i < args.length; i++) {
-
     try {
       switch (args[i]) {
         case '--domain':
@@ -69,7 +68,7 @@ const parseGoLinkFinderCommandLine = (input: string): GoLinkFinderParams => {
     }
   }
 
-  if (!params.domain  || params.domain.length === 0) {
+  if (!params.domain || params.domain.length === 0) {
     params.error = `🚨 No target domain/URL provided`;
     return params;
   }
@@ -284,9 +283,9 @@ const transformUserQueryToGoLinkFinderCommand = (lastMessage: Message) => {
   const answerMessage = endent`
   Query: "${lastMessage.content}"
 
-  Generate a command for the 'GoLinkFinder' tool, tailored to efficiently extract URLs from HTML content. Ensure to utilize the most pertinent flag, '--domain', to specify the target website. If detailed guidance or a comprehensive list of options is needed, appending the '-help' flag is recommended. The command should be structured as follows for clear understanding and effectiveness:
+  Based on this query, generate a command for the 'GoLinkFinder' tool, tailored to efficiently extract URLs from HTML content. Ensure to utilize the most pertinent flag, '--domain', to specify the target website. Include the '-help' flag if a help guide or a full list of flags is requested. The command should follow this structured format for clarity and accuracy:
 
-  **STANDARD COMMAND FORMAT**:
+  ALWAYS USE THIS FORMAT:
   \`\`\`json
   { "command": "golinkfinder --domain [target-domain]" }
   \`\`\`
@@ -295,11 +294,10 @@ const transformUserQueryToGoLinkFinderCommand = (lastMessage: Message) => {
   **Command Construction Guidelines for GoLinkFinder**:
   1. **Single Domain Focus**: Direct inclusion of the target domain in the command is mandatory. 
       - --domain (string): Specify the target website URL. (required)
-  2. **Selective Flag Application**: Choose flags that directly contribute to the scope of your query. The key flags include:
-      - --help: Display a help guide or a full list of available commands and flags.
-  3. **Limitation on Command and Domain Quantity**: 'GoLinkFinder' is designed to process a single command and a single domain at a time. Should there be attempts to include multiple domains or generate multiple commands by user query, respond back with tool's functionality restricts such operations.  
 
-  **Ensuring Precision and Efficiency**: To guarantee the command's relevance and the scanning process's efficiency, align the chosen flags with the specific needs of your request. The inclusion of any additional or unspecified flags may not be supported.
+  Note: **Selective Flag Application**: Choose flags that directly contribute to the scope of your query. The key flags include:
+      - --help: Display a help guide or a full list of available commands and flags.
+  Note: **Limitation on Command and Domain Quantity**: 'GoLinkFinder' is designed to process a single command and a single domain at a time. Should there be attempts to include multiple domains or generate multiple commands by user query, respond back with tool's functionality restricts such operations.  
 
   **Example Commands**:
   - For extracting URLs from a specific domain:
@@ -322,7 +320,12 @@ const transformUserQueryToGoLinkFinderCommand = (lastMessage: Message) => {
 const processGoLinkFinderData = (data: string): string => {
   const lines = data.split('\n');
   const processedLines = lines
-    .filter((line) => !line.includes('Still processing...') && !line.includes('goLinkFinder process completed.') && !line.includes('Starting goLinkFinder process...'))
+    .filter(
+      (line) =>
+        !line.includes('Still processing...') &&
+        !line.includes('goLinkFinder process completed.') &&
+        !line.includes('Starting goLinkFinder process...'),
+    )
     .map((line) => {
       if (line.startsWith('data: ')) {
         return line.replace('data: ', '').trim();
@@ -333,5 +336,3 @@ const processGoLinkFinderData = (data: string): string => {
 
   return processedLines.join('\n');
 };
-
-

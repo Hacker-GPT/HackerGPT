@@ -119,8 +119,7 @@ export const availablePlugins: Plugin[] = [
     selectorName: 'GoLinkFinder: URL Extraction',
     value: ToolID.GOLINKFINDER,
     icon: 'https://cdn-icons-png.flaticon.com/512/5972/5972097.png',
-    description:
-      'A minimalistic JavaScript endpoint extractor.',
+    description: 'A minimalistic JavaScript endpoint extractor.',
     categories: ['Free', 'New', 'Popular'],
     githubRepoUrl: 'https://github.com/0xsha/GoLinkFinder',
     isInstalled: false,

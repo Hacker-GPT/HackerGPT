@@ -13,7 +13,10 @@ import { isHttpxCommand, handleHttpxRequest } from './httpx/httpx.content';
 import { isNucleiCommand, handleNucleiRequest } from './nuclei/nuclei.content';
 import { handleCyberChefRequest } from './cyberchef/cyberchef.content';
 import { isCvemapCommand, handleCvemapRequest } from './cvemap/cvemap.content';
-import { isGoLinkFinderCommand, handleGoLinkFinderRequest } from './golinkfinder/golinkfinder.content';
+import {
+  isGoLinkFinderCommand,
+  handleGoLinkFinderRequest,
+} from './golinkfinder/golinkfinder.content';
 
 import { corsHeaders } from '@/pages/api/chat';
 
